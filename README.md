@@ -14,7 +14,7 @@
 
 ## 🤙🏻 커밋, 브랜치, PR 작성 규칙
 
-- ISSUE_TEMPLATE 폴더에 마크다운 파일 확인
+- WRITE_ISSUE 폴더에 마크다운 파일 확인
 - feat, fix, docs 등 PR 보내고, 팀원들이 코드 리뷰 후 메인에 merge
 
 ---
