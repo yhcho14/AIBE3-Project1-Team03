@@ -1,7 +1,5 @@
 # AIBE3-Project1-Team03
 
-AIBE3 3팀 &lt;h1>
-
 ---
 
 ## 🛠️ 협업
