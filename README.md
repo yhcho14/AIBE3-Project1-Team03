@@ -4,7 +4,7 @@
 
 ## 🛠️ 협업
 
-- ERDClouD
+- ERDCloud
   https://www.erdcloud.com/team/L4ydcGYcCE8nYE7yW
 
 - 팀 GitHub 저장소  
