@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useRouter } from 'next/navigation';
 
@@ -15,45 +15,93 @@ interface Post {
   tags: string | null;
   image: string | null;
   comment_count?: number;
+  like_count?: number;
 }
+
+const PAGE_SIZE = 12;
 
 export default function PostList() {
   const [posts, setPosts] = useState<Post[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(1);
   const router = useRouter();
+  const loader = useRef<HTMLDivElement | null>(null);
+
+  // 게시글 불러오기 (페이지 단위)
+  const fetchPosts = useCallback(async () => {
+    setLoading(true);
+    const from = (page - 1) * PAGE_SIZE;
+    const to = from + PAGE_SIZE - 1;
+    const { data: postsData, error } = await supabase
+      .from('posts')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .range(from, to);
+
+    if (!error && postsData) {
+      // 각 게시글별 댓글 수, 좋아요 수 불러오기
+      const postsWithCounts = await Promise.all(
+        postsData.map(async (post: Post) => {
+          // 댓글 수
+          const { count: commentCount } = await supabase
+            .from('comments')
+            .select('*', { count: 'exact', head: true })
+            .eq('post_id', post.id);
+          // 좋아요 수
+          const { count: likeCount } = await supabase
+            .from('post_recommends')
+            .select('*', { count: 'exact', head: true })
+            .eq('post_id', post.id);
+          return { ...post, comment_count: commentCount ?? 0, like_count: likeCount ?? 0 };
+        })
+      );
+      setPosts(prev => {
+        const ids = new Set(prev.map(p => p.id));
+        return [...prev, ...postsWithCounts.filter(p => !ids.has(p.id))];
+      });
+      setHasMore(postsData.length === PAGE_SIZE);
+    }
+    setLoading(false);
+  }, [page]);
 
   useEffect(() => {
-    const fetchPosts = async () => {
-      setLoading(true);
-      const { data: postsData, error } = await supabase
-        .from('posts')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (!error && postsData) {
-        // 각 게시글별 댓글 수 불러오기
-        const postsWithComments = await Promise.all(
-          postsData.map(async (post: Post) => {
-            const { count } = await supabase
-              .from('comments')
-              .select('*', { count: 'exact', head: true })
-              .eq('post_id', post.id);
-            return { ...post, comment_count: count ?? 0 };
-          })
-        );
-        setPosts(postsWithComments);
-      }
-      setLoading(false);
-    };
     fetchPosts();
-  }, []);
+  }, [fetchPosts]);
 
-  if (loading) {
+  // 무한 스크롤 감지
+  useEffect(() => {
+    if (!hasMore || loading) return;
+    const observer = new window.IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting) {
+          setPage(prev => prev + 1);
+        }
+      },
+      { threshold: 1 }
+    );
+    if (loader.current) observer.observe(loader.current);
+    return () => {
+      if (loader.current) observer.unobserve(loader.current);
+    };
+  }, [hasMore, loading]);
+
+  if (posts.length === 0 && loading) {
     return <div className="text-center py-20 text-gray-500">게시글을 불러오는 중...</div>;
   }
 
   return (
     <div className="space-y-6">
+      {/* 상단 컨트롤 영역 */}
+      <div className="flex justify-end mb-4">
+        <button
+          onClick={() => router.push('/board/write')}
+          className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center space-x-2 whitespace-nowrap"
+        >
+          <i className="ri-add-line"></i>
+          <span>글쓰기</span>
+        </button>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {posts.map((post) => (
           <div
@@ -86,22 +134,36 @@ export default function PostList() {
               </p>
               {post.tags && (
                 <div className="flex flex-wrap gap-2 mb-4">
-                  {post.tags.split(',').map((tag, idx) => (
-                    <span key={idx} className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">
-                      #{tag.trim()}
-                    </span>
-                  ))}
+                  {(() => {
+                    let tagsArr: string[] = [];
+                    try {
+                      tagsArr = JSON.parse(post.tags);
+                      if (!Array.isArray(tagsArr)) tagsArr = [];
+                    } catch {
+                      tagsArr = post.tags.split(',').map(t => t.replace(/["'\[\]]/g, '').trim());
+                    }
+                    return tagsArr.filter(Boolean).map((tag, idx) => (
+                      <span key={idx} className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs">
+                        #{tag}
+                      </span>
+                    ));
+                  })()}
                 </div>
               )}
               <div className="flex items-center justify-between text-sm text-gray-500">
                 <span>{post.created_at?.slice(0, 10)}</span>
                 <span>작성자: {post.user_id}</span>
                 <span>댓글: {post.comment_count ?? 0}</span>
+                <span>좋아요: {post.like_count ?? 0}</span>
               </div>
             </div>
           </div>
         ))}
       </div>
+      {/* 무한스크롤 로딩/감지용 div */}
+      <div ref={loader} />
+      {loading && <div className="text-center py-6 text-gray-400">로딩 중...</div>}
+      {!hasMore && <div className="text-center py-6 text-gray-400">모든 게시글을 불러왔습니다.</div>}
     </div>
   );
 }

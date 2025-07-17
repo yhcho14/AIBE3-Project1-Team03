@@ -39,7 +39,7 @@ export default function PostEditClient({ postId }: PostEditClientProps) {
         image: post.image || '',
       });
     }
-  }, [post, formatTagsForForm]);
+  }, [post]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;

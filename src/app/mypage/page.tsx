@@ -12,11 +12,11 @@ export default function MyPage() {
 
     const tabs = [
         { id: 'planner', name: '여행 플래너', icon: 'ri-calendar-line' },
-<<<<<<< HEAD
+
         { id: 'trips', name: '내 여행', icon: 'ri-map-2-line' },
-=======
+
         //{ id: 'trips', name: '내 여행', icon: 'ri-map-2-line' },
->>>>>>> develop
+
         { id: 'profile', name: '프로필', icon: 'ri-user-line' },
     ]
 

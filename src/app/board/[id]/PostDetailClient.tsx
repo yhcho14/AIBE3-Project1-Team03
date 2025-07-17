@@ -42,14 +42,14 @@ export default function PostDetailClient({ postId }: PostDetailClientProps) {
     const fetchLikes = async () => {
       // 좋아요 개수
       const { count } = await supabase
-        .from('likes')
+        .from('post_recommends')
         .select('*', { count: 'exact', head: true })
         .eq('post_id', postId);
       setLikeCount(count ?? 0);
       // 내가 좋아요 눌렀는지
       if (userId) {
         const { data } = await supabase
-          .from('likes')
+          .from('post_recommends')
           .select('id')
           .eq('post_id', postId)
           .eq('user_id', userId)
@@ -70,7 +70,7 @@ export default function PostDetailClient({ postId }: PostDetailClientProps) {
     if (isLiked) {
       // 좋아요 취소
       await supabase
-        .from('likes')
+        .from('post_recommends')
         .delete()
         .eq('post_id', postId)
         .eq('user_id', userId);
@@ -79,7 +79,7 @@ export default function PostDetailClient({ postId }: PostDetailClientProps) {
     } else {
       // 좋아요 추가
       await supabase
-        .from('likes')
+        .from('post_recommends')
         .insert({ post_id: postId, user_id: userId });
       setIsLiked(true);
       setLikeCount((c) => c + 1);
