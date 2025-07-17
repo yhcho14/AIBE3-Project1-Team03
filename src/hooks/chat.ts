@@ -249,6 +249,5 @@ export function useAISearchChat(
         replyBad,
         replyIDK,
         replyFinalDecision,
-        generateTravelPlanSummary,
     }
 }

@@ -123,7 +123,7 @@ export default function AISearchExpandableInput() {
                                     return (
                                         <button
                                             key={idx}
-                                            onClick={onClickHandler} // onClick 핸들러 연결
+                                            onClick={generateTravelPlanSummary} // onClick 핸들러 연결
                                             className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm"
                                         >
                                             {label}
