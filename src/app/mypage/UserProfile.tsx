@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supsbaseClient'
+import { Users, Users2 } from 'lucide-react'
 
 export default function UserProfile() {
     const [isEditing, setIsEditing] = useState(false)
@@ -21,32 +22,48 @@ export default function UserProfile() {
 
     useEffect(() => {
         const fetchProfile = async () => {
-            // 1. 현재 로그인된 유저 정보 가져오기
             const {
                 data: { user },
             } = await supabase.auth.getUser()
-            if (!user) return
-
-            // 2. DB에서 추가 정보 가져오기 (예: User 테이블)
-            const { data, error } = await supabase.from('User').select('*').eq('email', user.email).single()
-
-            if (error) {
-                alert('유저 정보 조회 실패')
+            if (!user) {
+                setProfile(null)
                 return
             }
-            setProfile(data)
+
+            setProfile({
+                name: user.user_metadata?.name ?? null,
+                email: user.email ?? null,
+                bio: user.user_metadata?.bio ?? null,
+                interests: Array.isArray(user.user_metadata?.interests) ? user.user_metadata.interests : [],
+                birthDate: user.user_metadata?.birthDate ?? null,
+                gender: user.user_metadata?.gender ?? null,
+            })
         }
 
         fetchProfile()
     }, [])
 
+    // profile이 null이 아닐 때만 editForm을 초기화
+    useEffect(() => {
+        if (profile) {
+            setEditForm(profile)
+        }
+    }, [profile])
+
     if (!profile) {
         return <div className="text-center py-20 text-gray-500">프로필 정보를 불러오는 중입니다...</div>
     }
 
+    // 이렇게 선택형으로 할건지, 입력형으로 할건지, 둘 다 할건지 고민중중
+    const travelStyles = [
+        { id: 'relax', name: '휴식형' },
+        { id: 'adventure', name: '모험형' },
+        { id: 'culture', name: '문화탐방형' },
+        { id: 'food', name: '미식형' },
+    ]
+
     return (
         <div className="space-y-6">
-            {/* Header */}
             <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold text-gray-800">프로필</h2>
                 {!isEditing ? (
@@ -103,9 +120,11 @@ export default function UserProfile() {
                                     {(profile.interests ?? []).map((interest: any) => (
                                         <span
                                             key={interest}
-                                            className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
+                                            className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm flex items-center space-x-1"
                                         >
-                                            {interest}
+                                            {/* 아이콘이 필요하다면 interest에 따라 조건부 렌더링 -> 일단 킵 */}
+                                            {/* <i className="ri-star-line"></i> */}
+                                            <span>{interest}</span>
                                         </span>
                                     ))}
                                 </div>
@@ -117,7 +136,7 @@ export default function UserProfile() {
                                         <label className="block text-sm font-medium text-gray-700 mb-2">이름</label>
                                         <input
                                             type="text"
-                                            value={editForm.name}
+                                            value={editForm.name ?? ''}
                                             onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         />
@@ -147,9 +166,9 @@ export default function UserProfile() {
                 </div>
             </div>
 
-            {/* Detailed Information */}
+            {/* -----------------프로필 정보--------------------------- */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Personal Information */}
+                {/* ----------------------개인 정보--------------------------- */}
                 <div className="bg-white rounded-xl border border-gray-200 p-6">
                     <h3 className="text-lg font-semibold text-gray-800 mb-4">개인 정보</h3>
 
@@ -218,41 +237,38 @@ export default function UserProfile() {
                                             key={interest}
                                             className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm flex items-center space-x-1"
                                         >
-                                            <i
-                                                className={
-                                                    interests.find((i) => i.name === interest)?.icon || 'ri-star-line'
-                                                }
-                                            ></i>
+                                            {/* 아이콘이 필요하다면 interest에 따라 조건부 렌더링 */}
+                                            {/* <i className="ri-star-line"></i> */}
                                             <span>{interest}</span>
                                         </span>
                                     ))}
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-2 gap-2">
-                                    {(interests ?? []).map((interest: any) => (
-                                        <label key={interest.id} className="flex items-center space-x-2 cursor-pointer">
+                                    {(profile.interests ?? []).map((interest: any) => (
+                                        <label key={interest} className="flex items-center space-x-2 cursor-pointer">
                                             <input
                                                 type="checkbox"
-                                                checked={editForm.interests.includes(interest.name)}
+                                                checked={editForm.interests.includes(interest)}
                                                 onChange={(e) => {
                                                     if (e.target.checked) {
                                                         setEditForm({
                                                             ...editForm,
-                                                            interests: [...editForm.interests, interest.name],
+                                                            interests: [...editForm.interests, interest],
                                                         })
                                                     } else {
                                                         setEditForm({
                                                             ...editForm,
                                                             interests: editForm.interests.filter(
-                                                                (i) => i !== interest.name,
+                                                                (i: any) => i !== interest,
                                                             ),
                                                         })
                                                     }
                                                 }}
                                                 className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                                             />
-                                            <i className={interest.icon}></i>
-                                            <span className="text-sm">{interest.name}</span>
+                                            {/* <i className="ri-star-line"></i> */}
+                                            <span className="text-sm">{interest}</span>
                                         </label>
                                     ))}
                                 </div>
@@ -263,11 +279,11 @@ export default function UserProfile() {
                             <label className="block text-sm font-medium text-gray-700 mb-2">여행 스타일</label>
                             {!isEditing ? (
                                 <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
-                                    {travelStyles?.find((s: any) => s.id === profile.travelStyle)?.name}
+                                    {travelStyles.find((s) => s.id === profile.travelStyle)?.name ?? '설정 안됨'}
                                 </span>
                             ) : (
                                 <div className="space-y-2">
-                                    {(travelStyles ?? []).map((style: any) => (
+                                    {(travelStyles ?? []).map((style) => (
                                         <label key={style.id} className="flex items-center cursor-pointer">
                                             <input
                                                 type="radio"
@@ -300,13 +316,13 @@ export default function UserProfile() {
                         <i className="ri-arrow-right-s-line text-gray-400"></i>
                     </button>
 
-                    <button className="w-full text-left px-4 py-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-between">
+                    {/* <button className="w-full text-left px-4 py-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-between">
                         <div className="flex items-center space-x-3">
                             <i className="ri-notification-line text-gray-500"></i>
                             <span>알림 설정</span>
                         </div>
                         <i className="ri-arrow-right-s-line text-gray-400"></i>
-                    </button>
+                    </button> */}
 
                     <button className="w-full text-left px-4 py-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-between">
                         <div className="flex items-center space-x-3">
