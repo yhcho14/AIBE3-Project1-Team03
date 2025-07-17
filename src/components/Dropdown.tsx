@@ -34,9 +34,7 @@ export default function Dropdown({ options, selected, onSelect, className }: Dro
                 className="flex items-center justify-between w-36 px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors pr-8"
                 onClick={() => setOpen((v) => !v)}
             >
-                <span className="text-sm text-gray-600 w-full text-left">
-                    {options.find((opt) => opt.value === selected)?.label}
-                </span>
+                <span className="text-sm w-full text-left">{options.find((opt) => opt.value === selected)?.label}</span>
                 <i
                     className={`ri-arrow-down-s-line text-gray-400 transition-transform ${open ? 'rotate-180' : ''}`}
                 ></i>

@@ -5,7 +5,7 @@ export default async function getPublicDataFromApiRoute<T>(params: string): Prom
         const response = await fetch(
             `${
                 process.env.NEXT_PUBLIC_VERCEL_URL || process.env.VERCEL_URL || 'http://localhost:3000'
-            }/api/fetch-public-data${params ? `?${params}` : ''}`,
+            }/api/fetch-public-data${params}`,
             { cache: 'no-store' },
         )
 

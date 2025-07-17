@@ -13,7 +13,7 @@ interface PlaceListProps {
 
 type PlaceItem = {
     id: number
-    contentType: string
+    category: string
     areaCode: number
     title: string
     addr: string
@@ -43,12 +43,19 @@ const sortOptions = [
     { value: 'created', label: '등록일순' },
 ]
 
+const categories = Array.from(contentTypeMap)
+const categoryOptions = [
+    { value: '0', label: '유형 전체' },
+    ...categories.map((cat) => ({ value: cat[0], label: cat[1] })),
+]
+
 const API_TYPE_AREA_BASED_LIST = 'areaBasedList2'
 
 export default function PlaceList({ onSelectPlace }: PlaceListProps) {
     const [places, setPlaces] = useState<PlaceItem[]>([])
     const [sortBy, setSortBy] = useState(sortOptions[0].value)
     const [filterLocation, setFilterLocation] = useState(locations[0])
+    const [filterCategory, setFilterCategory] = useState('0')
     const [currentPage, setCurrentPage] = useState(1)
     const [totalCount, setTotalCount] = useState(0)
     const pageSize = 12
@@ -65,14 +72,14 @@ export default function PlaceList({ onSelectPlace }: PlaceListProps) {
         ]
             .filter(Boolean)
             .join('&')
-        const query = params ? params : ''
+        const query = params ? `?${params}` : ''
 
         getPublicDataFromApiRoute<Place>(query).then((data) => {
             const items = data?.response?.body?.items?.item || []
             setPlaces(
                 items.map((item: Place) => ({
                     id: item.contentid,
-                    contentType: contentTypeMap.get(item.contenttypeid.toString()) || '',
+                    category: contentTypeMap.get(item.contenttypeid.toString()) || '',
                     areaCode: item.areacode,
                     title: item.title,
                     addr: item.addr1,
@@ -86,7 +93,7 @@ export default function PlaceList({ onSelectPlace }: PlaceListProps) {
             )
             setTotalCount(Number(data?.response?.body?.totalCount) || 0)
         })
-    }, [currentPage, sortBy, filterLocation])
+    }, [currentPage, sortBy, filterLocation, filterCategory])
 
     // 정렬/필터 변경 시 페이지를 1로 리셋
     const handleSortChange = (value: string) => {
@@ -121,8 +128,8 @@ export default function PlaceList({ onSelectPlace }: PlaceListProps) {
                         </button>
                     ))}
                 </div>
-
-                <div className="flex items-center space-x-4">
+                <div className="flex flex-row items-center space-x-2">
+                    <Dropdown options={categoryOptions} selected={filterCategory} onSelect={setFilterCategory} />
                     <Dropdown options={sortOptions} selected={sortBy} onSelect={handleSortChange} />
                 </div>
             </div>
@@ -141,9 +148,9 @@ export default function PlaceList({ onSelectPlace }: PlaceListProps) {
                                 className="w-full h-full object-cover object-top"
                             />
                             <div className="absolute top-4 left-4">
-                                {place.contentType && (
+                                {place.category && (
                                     <span className="px-3 py-1 bg-black/70 text-white rounded-full text-xs">
-                                        {place.contentType}
+                                        {place.category}
                                     </span>
                                 )}
                             </div>
