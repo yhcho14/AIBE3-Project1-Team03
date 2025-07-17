@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
-import { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } from '@google/generative-ai'
+import { GoogleGenAI, HarmBlockThreshold, HarmCategory } from '@google/genai'
 const API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY
-const genAI = new GoogleGenerativeAI(API_KEY || '') // API_KEY가 없을 경우 빈 문자열 전달
+const genAI = new GoogleGenAI({ apiKey: API_KEY }) // API_KEY가 없을 경우 빈 문자열 전달
 
 export interface Message {
     role: 'user' | 'ai'
@@ -67,20 +67,31 @@ export function useAISearchChat(
         }
 
         try {
-            const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+            //const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
 
-            const chat = model.startChat({
-                history: [
-                    {
-                        role: 'user',
-                        parts: [{ text: SYSTEM_PROMPT }],
-                    },
+            const contents = [
+                // 시스템 프롬프트를 대화의 첫 번째 메시지로 추가
+                {
+                    role: 'user',
+                    parts: [{ text: SYSTEM_PROMPT }],
+                },
+                // 기존 채팅 기록을 이어서 추가
+                // Gemini API는 'model' 역할을 사용하므로 'ai'를 'model'로 매핑
+                ...chatHistory.map((msg) => ({
+                    role: msg.role === 'user' ? 'user' : 'model',
+                    parts: [{ text: msg.text }],
+                })),
+                // 현재 사용자 메시지 추가
+                {
+                    role: 'user',
+                    parts: [{ text: userMessageText }],
+                },
+            ]
 
-                    ...chatHistory.map((msg) => ({
-                        role: msg.role === 'user' ? 'user' : 'model', // Gemini API는 'model' 역할을 사용
-                        parts: [{ text: msg.text }],
-                    })),
-                ],
+            // chat.sendMessage 대신 genAI.models.generateContent 직접 호출
+            const result = await genAI.models.generateContent({
+                model: 'gemini-2.5-flash', // 모델 이름 직접 지정
+                contents: contents, // 구성된 contents 배열 전달
                 generationConfig: {
                     maxOutputTokens: 200,
                 },
@@ -102,11 +113,13 @@ export function useAISearchChat(
                         threshold: HarmBlockThreshold.BLOCK_NONE,
                     },
                 ],
+                config: {
+                    responseMimeType: 'text/plain',
+                },
             })
 
-            const result = await chat.sendMessage(userMessageText)
-            const response = await result.response
-            const text = response.text()
+            // const response = await result.response // 이 줄은 제거되었습니다.
+            const text = result.text ?? '정보 추출에 실패했습니다.' // result에서 직접 text() 호출
             return text
         } catch (error) {
             console.error('Error getting AI response:', error)
@@ -121,16 +134,16 @@ export function useAISearchChat(
         }
 
         try {
-            const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+            //const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
 
             // 대화 기록을 텍스트로 변환
-            // SYSTEM_PROMPT는 이미 chatHistory에 포함되어 있으므로, 여기서는 순수 대화 내용만 사용합니다.
+            // SYSTEM_PROMPT는 이미 chatHistory에 포함되어 있으므로, 여기서는 순수 대화 내용만 사용
             const conversationText = chatHistory
                 .map((msg) => `${msg.role === 'user' ? '사용자' : 'AI'}: ${msg.text}`)
                 .join('\n')
 
             // 추출을 위한 프롬프트 구성
-            // AI에게 어떤 정보를 어떤 형식으로 추출할지 명확하게 지시합니다.
+            // AI에게 어떤 정보를 어떤 형식으로 추출할지 명확하게 지시.
             const extractionPrompt = `다음은 사용자와의 여행 관련 대화 내용입니다. 이
     대화에서 '여행지,경비,추천교통편,행사,반려동물가능여부'의 순서로 핵심 정보를 추출하여 콤마(,)로
     구분된 하나의 문자열로 반환해 주십시오. 만약 특정 정보가 대화에 명시적으로 언급되지 않았다면
@@ -141,9 +154,15 @@ export function useAISearchChat(
     --- 추출 결과 ---`
 
             // generateContent를 사용하여 한 번의 요청으로 정보 추출
-            const result = await model.generateContent(extractionPrompt)
-            const response = await result.response
-            const extractedSummary = response.text()
+            const result = await genAI.models.generateContent({
+                // 이 부분을 수정
+                model: 'gemini-2.5-flash', // 모델 이름
+                contents: extractionPrompt, // 추출 프롬프트 전달
+                config: {
+                    responseMimeType: 'text/plain',
+                },
+            })
+            const extractedSummary = result.text ?? '정보 추출에 실패했습니다.'
             return extractedSummary.trim()
         } catch (error) {
             console.error('Error generating travel plan summary:', error)
