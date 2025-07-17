@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server'
 import axios from 'axios'
 
-const API_TYPE_AREA_BASED_LIST = 'areaBasedList2' // 지역기반 관광지정보 조회
-const BASE_URL = 'http://apis.data.go.kr/B551011/KorService2/' + API_TYPE_AREA_BASED_LIST
+const BASE_URL = 'http://apis.data.go.kr/B551011/KorService2/'
 
 export async function GET(request: Request) {
     try {
@@ -14,11 +13,11 @@ export async function GET(request: Request) {
         // 쿼리 파라미터에서 가져오기
         const { searchParams } = new URL(request.url)
 
-        // const contentType = searchParams.get('contentType')
-        // if (!contentType) {
-        //     return NextResponse.json({ message: 'contentType is required.' }, { status: 400 })
-        // }
-        // const API_ENDPOINT = BASE_URL + contentType
+        const contentType = searchParams.get('contentType')
+        if (!contentType) {
+            return NextResponse.json({ message: 'contentType is required.' }, { status: 400 })
+        }
+        const API_ENDPOINT = BASE_URL + contentType
 
         const arrange = searchParams.get('arrange') || 'O'
         const pageNo = searchParams.get('pageNo') || '1'
@@ -34,7 +33,7 @@ export async function GET(request: Request) {
             pageNo: pageNo,
         }
 
-        const response = await axios.get(BASE_URL, {
+        const response = await axios.get(API_ENDPOINT, {
             params,
         })
 

@@ -16,7 +16,6 @@ export default function PlacesPage() {
 
             <div className="pt-24 pb-16">
                 <div className="max-w-7xl mx-auto px-6">
-                    {/* Header */}
                     <div className="mb-8">
                         <h1 className="text-3xl font-bold text-gray-800 mb-2">여행지</h1>
                         <p className="text-gray-600">다음 여행을 위한 특별한 장소를 찾아보세요</p>

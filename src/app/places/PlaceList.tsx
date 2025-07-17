@@ -43,6 +43,8 @@ const sortOptions = [
     { value: 'created', label: '등록일순' },
 ]
 
+const API_TYPE_AREA_BASED_LIST = 'areaBasedList2'
+
 export default function PlaceList({ onSelectPlace }: PlaceListProps) {
     const [places, setPlaces] = useState<PlaceItem[]>([])
     const [sortBy, setSortBy] = useState(sortOptions[0].value)
@@ -55,6 +57,7 @@ export default function PlaceList({ onSelectPlace }: PlaceListProps) {
 
     useEffect(() => {
         const params = [
+            `contentType=${API_TYPE_AREA_BASED_LIST}`,
             `pageNo=${currentPage}`,
             `pageSize=${pageSize}`,
             sortBy ? `sort=${sortBy}` : '',
@@ -62,7 +65,7 @@ export default function PlaceList({ onSelectPlace }: PlaceListProps) {
         ]
             .filter(Boolean)
             .join('&')
-        const query = params ? `?${params}` : ''
+        const query = params ? params : ''
 
         getPublicDataFromApiRoute<Place>(query).then((data) => {
             const items = data?.response?.body?.items?.item || []
