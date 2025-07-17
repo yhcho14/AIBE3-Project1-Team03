@@ -4,6 +4,8 @@ import { usePost } from '../../../hooks/usePost';
 import Header from '../../../components/Header';
 import Footer from '../../../components/Footer';
 import Comments from '../../../components/Comments';
+import { useEffect, useState } from 'react';
+import { supabase } from '../../../lib/supabase';
 
 interface PostDetailClientProps {
   postId: string;
@@ -19,6 +21,71 @@ export default function PostDetailClient({ postId }: PostDetailClientProps) {
     formatTagsForDisplay,
     router,
   } = usePost(postId);
+
+  // 좋아요 상태
+  const [likeCount, setLikeCount] = useState(0);
+  const [isLiked, setIsLiked] = useState(false);
+  const [likeLoading, setLikeLoading] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+
+  // 유저 정보 가져오기
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUserId(user?.id ?? null);
+    };
+    getUser();
+  }, []);
+
+  // 좋아요 개수 및 내 좋아요 여부 불러오기
+  useEffect(() => {
+    const fetchLikes = async () => {
+      // 좋아요 개수
+      const { count } = await supabase
+        .from('likes')
+        .select('*', { count: 'exact', head: true })
+        .eq('post_id', postId);
+      setLikeCount(count ?? 0);
+      // 내가 좋아요 눌렀는지
+      if (userId) {
+        const { data } = await supabase
+          .from('likes')
+          .select('id')
+          .eq('post_id', postId)
+          .eq('user_id', userId)
+          .single();
+        setIsLiked(!!data);
+      }
+    };
+    if (postId) fetchLikes();
+  }, [postId, userId]);
+
+  // 좋아요 토글
+  const handleLike = async () => {
+    if (!userId) {
+      alert('로그인이 필요합니다.');
+      return;
+    }
+    setLikeLoading(true);
+    if (isLiked) {
+      // 좋아요 취소
+      await supabase
+        .from('likes')
+        .delete()
+        .eq('post_id', postId)
+        .eq('user_id', userId);
+      setIsLiked(false);
+      setLikeCount((c) => c - 1);
+    } else {
+      // 좋아요 추가
+      await supabase
+        .from('likes')
+        .insert({ post_id: postId, user_id: userId });
+      setIsLiked(true);
+      setLikeCount((c) => c + 1);
+    }
+    setLikeLoading(false);
+  };
 
   const handleBack = () => {
     router.push("/board");
@@ -108,13 +175,13 @@ export default function PostDetailClient({ postId }: PostDetailClientProps) {
                   <span>{post.created_at?.slice(0, 10)}</span>
                 </div>
               </div>
-              {post.location && (
-                <div className="ml-auto">
+              <div className="ml-auto flex items-center space-x-2">
+                {post.location && (
                   <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
                     {post.location}
                   </span>
-                </div>
-              )}
+                )}
+              </div>
             </div>
             <h1 className="text-3xl font-bold text-gray-800 mb-4">{post.title}</h1>
             {displayTags.length > 0 && (
@@ -146,6 +213,18 @@ export default function PostDetailClient({ postId }: PostDetailClientProps) {
               </div>
             </div>
           )}
+
+          {/* 댓글 위 좋아요 버튼 */}
+          <div className="mb-6 flex justify-end">
+            <button
+              onClick={handleLike}
+              disabled={likeLoading}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg border transition-colors ${isLiked ? 'bg-pink-100 border-pink-300 text-pink-600' : 'bg-gray-50 border-gray-200 text-gray-600'} disabled:opacity-50`}
+            >
+              <span>{isLiked ? '❤️' : '🤍'}</span>
+              <span>좋아요 {likeCount}</span>
+            </button>
+          </div>
 
           {/* Comments */}
           <Comments postId={postId} />
