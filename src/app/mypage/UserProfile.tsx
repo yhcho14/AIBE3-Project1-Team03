@@ -1,18 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { supabase } from '../../lib/supsbaseClient'
 
 export default function UserProfile() {
     const [isEditing, setIsEditing] = useState(false)
-    const [profile, setProfile] = useState({
-        name: '김여행',
-        email: 'travel@example.com',
-        birthDate: '1990-05-15',
-        gender: 'female',
-        bio: '여행을 사랑하는 자유로운 영혼입니다. 새로운 곳을 탐험하고 다양한 문화를 경험하는 것을 좋아해요.',
-        interests: ['자연', '맛집', '문화', '사진'],
-        travelStyle: 'relaxed',
-    })
+    const [profile, setProfile] = useState<any>(null)
 
     const [editForm, setEditForm] = useState(profile)
 
@@ -26,23 +19,30 @@ export default function UserProfile() {
         setIsEditing(false)
     }
 
-    const interests = [
-        { id: 'nature', name: '자연', icon: 'ri-leaf-line' },
-        { id: 'food', name: '맛집', icon: 'ri-restaurant-line' },
-        { id: 'culture', name: '문화', icon: 'ri-building-line' },
-        { id: 'photo', name: '사진', icon: 'ri-camera-line' },
-        { id: 'shopping', name: '쇼핑', icon: 'ri-shopping-bag-line' },
-        { id: 'adventure', name: '모험', icon: 'ri-mountain-line' },
-        { id: 'beach', name: '해변', icon: 'ri-sun-line' },
-        { id: 'history', name: '역사', icon: 'ri-book-line' },
-    ]
+    useEffect(() => {
+        const fetchProfile = async () => {
+            // 1. 현재 로그인된 유저 정보 가져오기
+            const {
+                data: { user },
+            } = await supabase.auth.getUser()
+            if (!user) return
 
-    const travelStyles = [
-        { id: 'relaxed', name: '여유로운 여행' },
-        { id: 'adventure', name: '모험적인 여행' },
-        { id: 'cultural', name: '문화 체험 중심' },
-        { id: 'luxury', name: '럭셔리 여행' },
-    ]
+            // 2. DB에서 추가 정보 가져오기 (예: User 테이블)
+            const { data, error } = await supabase.from('User').select('*').eq('email', user.email).single()
+
+            if (error) {
+                alert('유저 정보 조회 실패')
+                return
+            }
+            setProfile(data)
+        }
+
+        fetchProfile()
+    }, [])
+
+    if (!profile) {
+        return <div className="text-center py-20 text-gray-500">프로필 정보를 불러오는 중입니다...</div>
+    }
 
     return (
         <div className="space-y-6">
@@ -100,7 +100,7 @@ export default function UserProfile() {
                                 </div>
                                 <p className="text-gray-700">{profile.bio}</p>
                                 <div className="flex flex-wrap gap-2">
-                                    {profile.interests.map((interest) => (
+                                    {(profile.interests ?? []).map((interest: any) => (
                                         <span
                                             key={interest}
                                             className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
@@ -213,7 +213,7 @@ export default function UserProfile() {
                             <label className="block text-sm font-medium text-gray-700 mb-2">관심사</label>
                             {!isEditing ? (
                                 <div className="flex flex-wrap gap-2">
-                                    {profile.interests.map((interest) => (
+                                    {(profile.interests ?? []).map((interest: any) => (
                                         <span
                                             key={interest}
                                             className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm flex items-center space-x-1"
@@ -229,7 +229,7 @@ export default function UserProfile() {
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-2 gap-2">
-                                    {interests.map((interest) => (
+                                    {(interests ?? []).map((interest: any) => (
                                         <label key={interest.id} className="flex items-center space-x-2 cursor-pointer">
                                             <input
                                                 type="checkbox"
@@ -263,11 +263,11 @@ export default function UserProfile() {
                             <label className="block text-sm font-medium text-gray-700 mb-2">여행 스타일</label>
                             {!isEditing ? (
                                 <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
-                                    {travelStyles.find((s) => s.id === profile.travelStyle)?.name}
+                                    {travelStyles?.find((s: any) => s.id === profile.travelStyle)?.name}
                                 </span>
                             ) : (
                                 <div className="space-y-2">
-                                    {travelStyles.map((style) => (
+                                    {(travelStyles ?? []).map((style: any) => (
                                         <label key={style.id} className="flex items-center cursor-pointer">
                                             <input
                                                 type="radio"
