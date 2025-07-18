@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { supabase } from '../../lib/supsbaseClient'
+import { supabase } from '../../lib/supabase.js'
 
 export default function SignupPage() {
     const [formData, setFormData] = useState({
