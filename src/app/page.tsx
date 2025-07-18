@@ -4,6 +4,7 @@ import Header from '../components/Header'
 import Footer from '../components/Footer'
 import AISearchBar from '../components/AISearchBar'
 import PopularDestinations from '../components/PopularDestinations'
+import PopularPosts from '../components/PopularPosts'
 
 export default function Home() {
     return (
@@ -38,6 +39,9 @@ export default function Home() {
 
             {/* Popular Destinations */}
             <PopularDestinations />
+
+            {/* Popular Posts */}
+            <PopularPosts />
 
             <Footer />
         </div>

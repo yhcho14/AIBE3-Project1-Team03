@@ -1,5 +1,6 @@
 'use client'
 
+
 import { useRef } from 'react'
 import { useAISearchChat } from '../hooks/useAISearchChat'
 
