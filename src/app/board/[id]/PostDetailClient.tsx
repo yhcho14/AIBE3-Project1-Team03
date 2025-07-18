@@ -5,7 +5,7 @@ import Header from '../../../components/Header'
 import Footer from '../../../components/Footer'
 import Comments from '../../../components/Comments'
 import { useEffect, useState } from 'react'
-import { supabase } from '../../../lib/supabase'
+import { supabase, getUserName } from '../../../lib/supabase'
 
 interface PostDetailClientProps {
     postId: string
@@ -19,6 +19,7 @@ export default function PostDetailClient({ postId }: PostDetailClientProps) {
     const [isLiked, setIsLiked] = useState(false)
     const [likeLoading, setLikeLoading] = useState(false)
     const [userId, setUserId] = useState<string | null>(null)
+    const [userName, setUserName] = useState<string>('익명')
 
     // 유저 정보 가져오기
     useEffect(() => {
@@ -30,6 +31,17 @@ export default function PostDetailClient({ postId }: PostDetailClientProps) {
         }
         getUser()
     }, [])
+
+    // 작성자 이름 가져오기
+    useEffect(() => {
+        const fetchUserName = async () => {
+            if (post?.user_id) {
+                const name = await getUserName(post.user_id)
+                setUserName(name)
+            }
+        }
+        fetchUserName()
+    }, [post?.user_id])
 
     // 좋아요 개수 및 내 좋아요 여부 불러오기
     useEffect(() => {
@@ -155,10 +167,10 @@ export default function PostDetailClient({ postId }: PostDetailClientProps) {
                     <div className="bg-white rounded-xl border border-gray-200 p-8 mb-6">
                         <div className="flex items-center space-x-4 mb-6">
                             <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center">
-                                <span className="text-white font-bold">{post.user_id?.slice(0, 1)}</span>
+                                <span className="text-white font-bold">{userName?.slice(0, 1)}</span>
                             </div>
                             <div>
-                                <h3 className="font-semibold text-gray-800">{post.user_id || '익명'}</h3>
+                                <h3 className="font-semibold text-gray-800">{userName}</h3>
                                 <div className="flex items-center space-x-4 text-sm text-gray-500">
                                     <span>{post.created_at?.slice(0, 10)}</span>
                                 </div>
@@ -175,8 +187,8 @@ export default function PostDetailClient({ postId }: PostDetailClientProps) {
                         {displayTags.length > 0 && (
                             <div className="flex flex-wrap gap-2 mb-6">
                                 {displayTags.map((tag, idx) => (
-                                    <span key={idx} className="text-gray-600 text-sm">
-                                        {tag}
+                                    <span key={idx} className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                                        #{tag}
                                     </span>
                                 ))}
                             </div>

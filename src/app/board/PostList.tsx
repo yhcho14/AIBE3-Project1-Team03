@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { supabase } from '../../lib/supabase'
+import { supabase, getUserNames } from '../../lib/supabase'
 import type { User } from '@supabase/supabase-js'
 import { useRouter } from 'next/navigation'
 
@@ -17,6 +17,7 @@ interface Post {
     image: string | null
     comment_count?: number
     like_count?: number
+    user_name?: string
 }
 
 const PAGE_SIZE = 12
@@ -58,9 +59,20 @@ export default function PostList() {
                     return { ...post, comment_count: commentCount ?? 0, like_count: likeCount ?? 0 }
                 }),
             )
+
+            // 사용자 이름 가져오기
+            const userIds = postsWithCounts.map(post => post.user_id);
+            const userNames = await getUserNames(userIds);
+            
+            // 게시글에 사용자 이름 추가
+            const postsWithUserNames = postsWithCounts.map(post => ({
+                ...post,
+                user_name: userNames[post.user_id] || '익명'
+            }));
+
             setPosts((prev) => {
                 const ids = new Set(prev.map((p) => p.id))
-                return [...prev, ...postsWithCounts.filter((p) => !ids.has(p.id))]
+                return [...prev, ...postsWithUserNames.filter((p) => !ids.has(p.id))]
             })
             setHasMore(postsData.length === PAGE_SIZE)
         }
@@ -174,7 +186,7 @@ export default function PostList() {
                             )}
                             <div className="flex items-center justify-between text-sm text-gray-500">
                                 <span>{post.created_at?.slice(0, 10)}</span>
-                                <span>작성자: {post.user_id}</span>
+                                <span>작성자: {post.user_name || '익명'}</span>
                                 <span>댓글: {post.comment_count ?? 0}</span>
                                 <span>좋아요: {post.like_count ?? 0}</span>
                             </div>
