@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { supabase } from '../lib/supsbaseClient'
+import { supabase } from '../lib/supabase'
 import { GoogleGenAI, HarmBlockThreshold, HarmCategory } from '@google/genai'
 
 const API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY
@@ -23,7 +23,7 @@ const SYSTEM_PROMPT = `당신은 사용자에게 여행 및 지역 정보를 제
       정보를 빠르게 얻을 수 있도록 합니다.
    4.  **대화 스타일:** 불필요한 사담이나 개인적인 감정 표현은 삼가고, 오직 사용자의 질문에 대한 정보 제공에만
       집중합니다.
-   5.  **필수 답변 유도:** 다음 필수 정보 중 없는 정보가 있다면 우선으로 질문해주십시오. "목적지, 여행인원, 여행시작일, 여행종료일, 여행기간, 예산"
+   5.  **필수 답변 유도:** 다음 필수 정보 중 없는 정보가 있다면 우선으로 질문해주십시오. "목적지, 여행인원, 여행시작일, 여행기간, 예산"
    여행 시작일은 오늘을 "2025-07-18"로 계산하고 여행 시작일과 여행 종료일을 계산해 주십시오.
    여행 종료일은 여행 시작일과 여행 기간이 주어졌다면 두 개를 더한 날짜로 계산해 주십시오.
    6.  **추가 답변 유도:** 사용자의 질문에 대답한 후, 더 나은 여행 경험을 위해 필요한 정보가 있다면 간단하지만 명확하게 한 줄로 질문해 주십시오.
@@ -172,12 +172,23 @@ export function useAISearchChat(
             })
             const extractedSummary = result.text ?? '정보 추출에 실패했습니다.'
 
-            const [destination_id, title, peopleCount, startDate, endDate, duration, transport, budget] =
-                extractedSummary.split(',').map((s) => s.trim())
+            const [destination, title, peopleCount, startDate, endDate, duration, transport, budget] = extractedSummary
+                .split(',')
+                .map((s) => s.trim())
 
-            // 숫자 필드 형 변환
+            //로그인했는지 확인, 추후 변경
+            const {
+                data: { user },
+                error: authError,
+            } = await supabase.auth.getUser()
+            const userId = user?.id
+            if (user) {
+                console.log('로그인한 유저 ID:', userId)
+            }
+
             const parsedData = {
-                destination_id: 1,
+                user_id: userId,
+                destination,
                 title,
                 num_travelers: Number(peopleCount),
                 start_date: startDate,
@@ -185,7 +196,8 @@ export function useAISearchChat(
                 travel_duration: Number(duration),
                 transportation: transport,
                 budget: Number(budget),
-                accommodation_id: 1,
+                status: 'draft',
+                //accommodation_id: 1,
             }
             const { data, error } = await supabase.from('travel').insert([parsedData])
 
