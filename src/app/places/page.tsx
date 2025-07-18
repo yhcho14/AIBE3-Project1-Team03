@@ -10,6 +10,10 @@ import PlaceDetail from './PlaceDetail'
 export default function PlacesPage() {
     const [selectedPlace, setSelectedPlace] = useState<number | null>(null)
 
+    const handleAddToTrip = (placeId: number) => {
+        console.log('Add to trip:', placeId)
+    }
+
     return (
         <div className="min-h-screen bg-gray-50">
             <Header />
@@ -24,7 +28,11 @@ export default function PlacesPage() {
                     {selectedPlace ? (
                         <PlaceDetail placeId={selectedPlace} onBack={() => setSelectedPlace(null)} />
                     ) : (
-                        <PlaceList onSelectPlace={setSelectedPlace} />
+                        <PlaceList
+                            onSelectPlace={setSelectedPlace}
+                            selectedPlaceId={selectedPlace}
+                            onAddToTrip={handleAddToTrip}
+                        />
                     )}
                 </div>
             </div>

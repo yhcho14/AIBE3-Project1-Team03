@@ -37,8 +37,54 @@ export async function GET(request: Request) {
             params,
         })
 
-        // const data = response.data;
-        // console.log("데이터: ", data);
+        // const data = response.data
+        // console.log('데이터: ', data.response.body.items.item)
+
+        // // -- 분류체계 코드 조회 --
+        // const lclsSystmCodeResponse = await axios.get(BASE_URL + 'lclsSystmCode2', {
+        //     params: {
+        //         serviceKey: SERVICE_KEY,
+        //         MobileOS: 'WEB',
+        //         MobileApp: 'AppTest',
+        //         _type: 'json',
+        //         // lclsSystmListYn: 'Y',
+        //         lclsSystm1: 'SH', // '백화점', '쇼핑몰', '대형마트', 면세점', ..., SH06은 '시장'
+        //         // lclsSystm2: 'SH06', // '비상설시장', '상설시장'
+        //         // lclsSystm3: 'SH060200', // 상설시장
+        //     },
+        // })
+        // // 숙박 > 켐필 > 일반야영장
+        // // 숙박 > 캠핑 > 오토캠핑장
+        // // 숙박 > 팬션/민박 > 농어촌민박
+        // // 목록조회할 때는 3층만 보여주고, 상세조회때 1 > 2 > 3 이렇게 보여주기.
+        // console.log('👍 lclsSystmCode', lclsSystmCodeResponse.data.response.body.items.item) // totalCount: 245
+
+        // // -- 서비스 분류코드 조회 --
+        // const categoryCodeResponse = await axios.get(BASE_URL + 'categoryCode2', {
+        //     params: {
+        //         serviceKey: SERVICE_KEY,
+        //         MobileOS: 'WEB',
+        //         MobileApp: 'AppTest',
+        //         _type: 'json',
+        //         // contentTypeId: 12,
+        //         cat1: 'A04', // 쇼핑 // ContentType
+        //         // cat2: 'A0401', // '5일장', '상설시장', '백화점', ...
+        //         // cat3: 'A04010200', // 상설시장
+        //     },
+        // })
+        // console.log('👍 categoryCode', categoryCodeResponse.data)
+
+        // // -- 공통정보 조회 (상세정보1) --
+        // const detailCommonResponse = await axios.get(BASE_URL + 'detailCommon2', {
+        //     params: {
+        //         serviceKey: SERVICE_KEY,
+        //         MobileOS: 'WEB',
+        //         MobileApp: 'AppTest',
+        //         _type: 'json',
+        //         contentId: 1433504, // 2901530 // 2465071
+        //     },
+        // })
+        // console.log('👍 detailCommon', detailCommonResponse.data.response.body.items.item)
 
         return NextResponse.json(response.data)
     } catch (error: any) {

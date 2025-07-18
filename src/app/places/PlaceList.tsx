@@ -9,6 +9,8 @@ import Pagination from '../../components/Pagination'
 
 interface PlaceListProps {
     onSelectPlace: (placeId: number) => void
+    selectedPlaceId: number | null
+    onAddToTrip?: (placeId: number) => void
 }
 
 type PlaceItem = {
@@ -20,7 +22,7 @@ type PlaceItem = {
     tags: string[]
     tags2: string[]
     image: string
-    description: string
+    // description: string
     createdTime: string
     modifiedTime: string
 }
@@ -51,13 +53,14 @@ const categoryOptions = [
 
 const API_TYPE_AREA_BASED_LIST = 'areaBasedList2'
 
-export default function PlaceList({ onSelectPlace }: PlaceListProps) {
+export default function PlaceList({ onSelectPlace, selectedPlaceId, onAddToTrip }: PlaceListProps) {
     const [places, setPlaces] = useState<PlaceItem[]>([])
     const [sortBy, setSortBy] = useState(sortOptions[0].value)
     const [filterLocation, setFilterLocation] = useState(locations[0])
     const [filterCategory, setFilterCategory] = useState('0')
     const [currentPage, setCurrentPage] = useState(1)
     const [totalCount, setTotalCount] = useState(0)
+    const [hoveredPlaceId, setHoveredPlaceId] = useState<number | null>(null)
     const pageSize = 12
     const pageGroupSize = 5
     const topRef = useRef<HTMLDivElement>(null)
@@ -86,7 +89,6 @@ export default function PlaceList({ onSelectPlace }: PlaceListProps) {
                     tags: [item.cat1, item.cat2, item.cat3],
                     tags2: [item.lclsSystm1, item.lclsSystm2, item.lclsSystm3],
                     image: item.firstimage,
-                    description: '가족과 함께한 제주도 여행이 정말 좋았어요. 한라산 등반부터 오름 트레킹까지...',
                     createdTime: item.createdtime,
                     modifiedTime: item.modifiedtime,
                 })),
@@ -154,12 +156,26 @@ export default function PlaceList({ onSelectPlace }: PlaceListProps) {
                                     </span>
                                 )}
                             </div>
+
+                            <AddToTripButton
+                                hovered={hoveredPlaceId === place.id}
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    if (onAddToTrip) onAddToTrip(place.id)
+                                }}
+                                onMouseEnter={() => setHoveredPlaceId(place.id)}
+                                onMouseLeave={() => setHoveredPlaceId(null)}
+                            />
                         </div>
 
                         <div className="p-6">
-                            <h3 className="text-lg font-bold text-gray-800 mb-2 line-clamp-2">{place.title}</h3>
-
-                            <p className="text-gray-600 text-sm mb-4 line-clamp-2">{place.description}</p>
+                            <div className="flex items-center justify-between mb-2">
+                                <h3 className="text-lg font-bold text-gray-800 mb-2 line-clamp-2">{place.title}</h3>
+                                <div className="flex items-center text-gray-500 text-sm">
+                                    <i className="ri-user-line mr-1"></i>
+                                    <span>5.5M</span>
+                                </div>
+                            </div>
 
                             {place.addr && (
                                 <div className="text-xs text-gray-500 mb-2 flex items-center gap-1">
@@ -195,6 +211,33 @@ export default function PlaceList({ onSelectPlace }: PlaceListProps) {
                 pageGroupSize={pageGroupSize}
                 onPageChange={handlePageChange}
             />
+        </div>
+    )
+}
+
+type AddToTripButtonProps = {
+    hovered: boolean
+    onClick: (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => void
+    onMouseEnter: () => void
+    onMouseLeave: () => void
+}
+
+function AddToTripButton({ hovered, onClick, onMouseEnter, onMouseLeave }: AddToTripButtonProps) {
+    return (
+        <div
+            className={`absolute top-4 right-4 rounded-full flex items-center border border-gray-200 text-gray-600 bg-white/90 hover:bg-white overflow-hidden cursor-pointer group transition-all duration-300 justify-center
+                ${hovered ? 'w-36 px-4' : 'w-8 px-0'}
+            `}
+            style={{ minWidth: 32, height: 32 }}
+            onClick={onClick}
+            onMouseEnter={onMouseEnter}
+            onMouseLeave={onMouseLeave}
+        >
+            {hovered ? (
+                <span className="text-xs whitespace-nowrap">내 여행에 추가하기</span>
+            ) : (
+                <i className="ri-add-line text-sm"></i>
+            )}
         </div>
     )
 }
