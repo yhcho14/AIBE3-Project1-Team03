@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { supabase } from '../../lib/supsbaseClient'
+import { supabase } from '../../lib/supabaseClient'
 import { Users, Users2 } from 'lucide-react'
 
 export default function UserProfile() {
@@ -22,22 +22,38 @@ export default function UserProfile() {
 
     useEffect(() => {
         const fetchProfile = async () => {
-            const {
-                data: { user },
-            } = await supabase.auth.getUser()
-            if (!user) {
-                setProfile(null)
-                return
-            }
+            try {
+                const {
+                    data: { user },
+                } = await supabase.auth.getUser()
+                if (!user) {
+                    setProfile(null)
+                    return
+                }
 
-            setProfile({
-                name: user.user_metadata?.name ?? null,
-                email: user.email ?? null,
-                bio: user.user_metadata?.bio ?? null,
-                interests: Array.isArray(user.user_metadata?.interests) ? user.user_metadata.interests : [],
-                birthDate: user.user_metadata?.birthDate ?? null,
-                gender: user.user_metadata?.gender ?? null,
-            })
+                // 일단 user 테이블로 테스트
+                setProfile({
+                    name: user.user_metadata?.name ?? '사용자',
+                    email: user.email ?? 'user@example.com',
+                    bio: user.user_metadata?.bio ?? '자기소개를 입력해주세요.',
+                    interests: Array.isArray(user.user_metadata?.interests)
+                        ? user.user_metadata.interests
+                        : ['여행', '문화'],
+                    birthDate: user.user_metadata?.birthDate ?? '1990-01-01',
+                    gender: user.user_metadata?.gender ?? 'male',
+                })
+            } catch (error) {
+                console.error('프로필 로딩 중 에러:', error)
+                // 에러 발생 시 기본 프로필 설정
+                setProfile({
+                    name: '사용자',
+                    email: 'user@example.com',
+                    bio: '자기소개를 입력해주세요.',
+                    interests: ['여행', '문화'],
+                    birthDate: '1990-01-01',
+                    gender: 'male',
+                })
+            }
         }
 
         fetchProfile()
@@ -51,10 +67,17 @@ export default function UserProfile() {
     }, [profile])
 
     if (!profile) {
-        return <div className="text-center py-20 text-gray-500">프로필 정보를 불러오는 중입니다...</div>
+        return (
+            <div className="space-y-6">
+                <div className="flex justify-between items-center">
+                    <h2 className="text-2xl font-bold text-gray-800">프로필</h2>
+                </div>
+                <div className="text-center py-20 text-gray-500">프로필 정보를 불러오는 중입니다...</div>
+            </div>
+        )
     }
 
-    // 이렇게 선택형으로 할건지, 입력형으로 할건지, 둘 다 할건지 고민중중
+    // 이렇게 선택형으로 할건지, 입력형으로 할건지, 둘 다 할건지 고민중
     const travelStyles = [
         { id: 'relax', name: '휴식형' },
         { id: 'adventure', name: '모험형' },
