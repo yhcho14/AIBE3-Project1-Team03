@@ -8,6 +8,12 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@fullcalendar/core": "^6.1.18",
+    "@fullcalendar/daygrid": "^6.1.18",
+    "@fullcalendar/interaction": "^6.1.18",
+    "@fullcalendar/list": "^6.1.18",
+    "@fullcalendar/react": "^6.1.18",
+    "@fullcalendar/timegrid": "^6.1.18",
     "@google/genai": "^1.10.0",
     "@heroicons/react": "^2.2.0",
     "@supabase/supabase-js": "^2.51.0",
