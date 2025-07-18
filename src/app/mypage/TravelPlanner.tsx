@@ -115,26 +115,6 @@ export default function TravelPlanner() {
         return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
     }
 
-    const handleCreatePlan = () => {
-        if (!newPlan.title || !newPlan.startDate || !newPlan.endDate) return
-
-        const duration = calculateDuration(newPlan.startDate, newPlan.endDate)
-        const plan: TravelPlan = {
-            id: Date.now(),
-            title: newPlan.title,
-            numTravelers: newPlan.numTravelers || 0,
-            startDate: newPlan.startDate,
-            endDate: newPlan.endDate,
-            durationDays: duration,
-            transportation: newPlan.transportation || '',
-            accommodation: newPlan.accommodation || '',
-            estimatedCost: newPlan.estimatedCost || 0,
-            notes: newPlan.notes || '',
-            createdAt: new Date().toISOString().split('T')[0],
-            status: 'draft',
-            schedule: [],
-        }
-
         setPlans([plan, ...plans])
         setNewPlan({})
         setIsCreating(false)
@@ -165,7 +145,6 @@ export default function TravelPlanner() {
                 return '알 수 없음'
         }
     }
-
     return (
         <div className="space-y-6">
             {/* Header */}
