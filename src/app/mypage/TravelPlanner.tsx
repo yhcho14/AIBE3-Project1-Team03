@@ -115,8 +115,46 @@ export default function TravelPlanner() {
         return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
     }
 
+    const handleCreatePlan = () => {
+        if (!newPlan.title || !newPlan.startDate || !newPlan.endDate) {
+            alert('필수 정보를 모두 입력해주세요.')
+            return
+        }
+
+        const plan: TravelPlan = {
+            id: Date.now(),
+            title: newPlan.title || '',
+            numTravelers: newPlan.numTravelers || 0,
+            startDate: newPlan.startDate || '',
+            endDate: newPlan.endDate || '',
+            durationDays: calculateDuration(newPlan.startDate || '', newPlan.endDate || ''),
+            transportation: newPlan.transportation || '',
+            accommodation: newPlan.accommodation || '',
+            estimatedCost: newPlan.estimatedCost || 0,
+            notes: newPlan.notes || '',
+            createdAt: new Date().toISOString().split('T')[0],
+            status: 'draft',
+            schedule: [
+                {
+                    title: newPlan.title || '',
+                    startTime: new Date(newPlan.startDate || ''),
+                    endTime: new Date(newPlan.endDate || ''),
+                    note: newPlan.notes || '',
+                },
+            ],
+        }
+
         setPlans([plan, ...plans])
-        setNewPlan({})
+        setNewPlan({
+            title: '',
+            numTravelers: 0,
+            startDate: '',
+            endDate: '',
+            transportation: '',
+            accommodation: '',
+            estimatedCost: 0,
+            notes: '',
+        })
         setIsCreating(false)
     }
 
