@@ -30,7 +30,7 @@ export default function SignupPage() {
             return
         }
         setIsLoading(true)
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
             email: formData.email,
             password: formData.password,
             options: {
@@ -41,13 +41,58 @@ export default function SignupPage() {
         })
         setIsLoading(false)
         if (error) {
-            alert(error.message)
+            if (error.status === 409 || error.message.includes('User already registered')) {
+                setSignupError('이미 가입된 이메일입니다. 이메일 인증을 완료하거나, 비밀번호 찾기를 이용해 주세요.')
+            } else {
+                setSignupError(error.message)
+            }
+            setIsLoading(false)
             return
         }
-        // ------sns 연동 / 로그인 방식 등 추가한 뒤에 작성 마무리--------------
+
+        if (data?.user) {
+            const { error: insertError } = await supabase.from('user_profile').insert([
+                {
+                    user_id: data.user.id,
+                    nickname: '',
+                    introduce: '',
+                    interests: '',
+                    birth_date: null,
+                    gender: 'private',
+                    profile_img: '',
+                },
+            ])
+            if (insertError) {
+                console.error('user_profile insert error:', insertError)
+            }
+            setSignupSuccess(true)
+            return
+        }
+
         alert('회원가입이 완료되었습니다!')
         router.push('/login')
     }
+
+    const [passwordValid, setPasswordValid] = useState<boolean | null>(null)
+    const [passwordsMatch, setPasswordsMatch] = useState<boolean | null>(null)
+    const [nameValid, setNameValid] = useState<boolean | null>(null)
+
+    const validatePassword = (pw: string) => {
+        const valid =
+            pw.length >= 8 && /[A-Za-z]/.test(pw) && /[0-9]/.test(pw) && /[!@#$%^&*(),.?":{}|<>_\-\\[\]=+~`';]/.test(pw)
+        setPasswordValid(valid)
+    }
+
+    const validateName = (name: string) => {
+        // 한글만: 1~4글자, 영어만: 1~12글자
+        const isKorean = /^[가-힣]+$/.test(name)
+        const isEnglish = /^[A-Za-z]+$/.test(name)
+        const valid = (isKorean && name.length <= 4) || (isEnglish && name.length <= 12)
+        setNameValid(valid)
+    }
+
+    const [signupSuccess, setSignupSuccess] = useState(false)
+    const [signupError, setSignupError] = useState<string | null>(null)
 
     return (
         <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4">
@@ -75,12 +120,23 @@ export default function SignupPage() {
                                     type="text"
                                     name="name"
                                     value={formData.name}
-                                    onChange={handleChange}
+                                    onChange={(e) => {
+                                        handleChange(e)
+                                        validateName(e.target.value)
+                                    }}
                                     className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                     placeholder="이름을 입력하세요"
                                     required
                                 />
                             </div>
+                            {nameValid === true && (
+                                <div className="text-green-600 text-sm">사용 가능한 이름입니다.</div>
+                            )}
+                            {nameValid === false && (
+                                <div className="text-red-500 text-sm">
+                                    한글 4글자 이내 또는 영어 12글자 이내, 숫자/특수기호 불가
+                                </div>
+                            )}
                         </div>
 
                         <div>
@@ -111,12 +167,24 @@ export default function SignupPage() {
                                     type="password"
                                     name="password"
                                     value={formData.password}
-                                    onChange={handleChange}
+                                    onChange={(e) => {
+                                        handleChange(e)
+                                        validatePassword(e.target.value)
+                                        setPasswordsMatch(formData.confirmPassword === e.target.value)
+                                    }}
                                     className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                     placeholder="비밀번호를 입력하세요"
                                     required
                                 />
                             </div>
+                            {passwordValid === true && (
+                                <div className="text-green-600 text-sm">유효한 비밀번호입니다.</div>
+                            )}
+                            {passwordValid === false && (
+                                <div className="text-red-500 text-sm">
+                                    8자 이상, 영문+숫자, 특수기호를 모두 포함해야 합니다.
+                                </div>
+                            )}
                         </div>
 
                         <div>
@@ -129,16 +197,25 @@ export default function SignupPage() {
                                     type="password"
                                     name="confirmPassword"
                                     value={formData.confirmPassword}
-                                    onChange={handleChange}
+                                    onChange={(e) => {
+                                        handleChange(e)
+                                        setPasswordsMatch(e.target.value === formData.password)
+                                    }}
                                     className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                     placeholder="비밀번호를 다시 입력하세요"
                                     required
                                 />
                             </div>
+                            {passwordsMatch === true && (
+                                <div className="text-green-600 text-sm">비밀번호가 일치합니다.</div>
+                            )}
+                            {passwordsMatch === false && (
+                                <div className="text-red-500 text-sm">비밀번호가 일치하지 않습니다.</div>
+                            )}
                         </div>
                         <button
                             type="submit"
-                            disabled={isLoading}
+                            disabled={isLoading || passwordValid !== true || !passwordsMatch || nameValid !== true}
                             className="w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 flex items-center justify-center space-x-2 whitespace-nowrap"
                         >
                             {isLoading ? (
@@ -151,6 +228,24 @@ export default function SignupPage() {
                             )}
                         </button>
                     </form>
+
+                    {signupSuccess && (
+                        <div className="mt-6 text-center">
+                            <div className="text-green-600 font-semibold mb-4">
+                                회원가입에 성공했습니다.
+                                <br />
+                                이메일 인증을 완료해야 로그인할 수 있습니다.
+                            </div>
+                            <button
+                                onClick={() => router.push('/login')}
+                                className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+                            >
+                                확인
+                            </button>
+                        </div>
+                    )}
+
+                    {signupError && <div className="text-red-500 text-sm text-center mt-2">{signupError}</div>}
 
                     <div className="mt-6 text-center">
                         <span className="text-gray-600">이미 계정이 있으신가요? </span>

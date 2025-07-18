@@ -9,21 +9,63 @@ export default function LoginPage() {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [isLoading, setIsLoading] = useState(false)
+    const [loginError, setLoginError] = useState<string | null>(null)
     const router = useRouter()
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault()
         setIsLoading(true)
+        setLoginError(null)
 
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
             email: email,
             password: password,
         })
 
-        setIsLoading(false)
         if (error) {
-            alert(error.message)
+            if (error.message.includes('User not found')) {
+                setLoginError('존재하지 않는 아이디 입니다. 회원가입을 진행 해주세요')
+            } else if (error.message.includes('Invalid login credentials')) {
+                setLoginError('이메일 또는 비밀번호가 틀렸습니다. 다시 확인해주세요')
+            } else {
+                setLoginError(error.message)
+            }
+            setIsLoading(false)
             return
+        }
+        setIsLoading(false)
+
+        if (data?.user) {
+            // user_profile row가 있는지 확인
+            const { data: profile } = await supabase
+                .from('user_profile')
+                .select('user_id')
+                .eq('user_id', data.user.id)
+                .single()
+            if (!profile) {
+                await supabase.from('user_profile').insert([
+                    {
+                        user_id: data.user.id,
+                        nickname: '',
+                        introduce: '',
+                        interests: '',
+                        birth_date: null,
+                        gender: null,
+                        profile_img: '',
+                    },
+                ])
+            }
+            // 기존 is_deleted 체크 등 이하 생략
+            const { data: profileCheck } = await supabase
+                .from('user_profile')
+                .select('is_deleted')
+                .eq('user_id', data.user.id)
+                .single()
+            if (profileCheck?.is_deleted) {
+                await supabase.auth.signOut()
+                alert('삭제된 계정입니다. 회원가입을 다시 해주세요.')
+                return
+            }
         }
 
         alert('로그인 되었습니다')
@@ -83,17 +125,13 @@ export default function LoginPage() {
                         </div>
 
                         <div className="flex items-center justify-between">
-                            <label className="flex items-center">
-                                {/* <input
-                                    type="checkbox"
-                                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                                />
-                                <span className="ml-2 text-sm text-gray-600">로그인 상태 유지</span> */}
-                            </label>
+                            <label className="flex items-center"></label>
                             <Link href="#" className="text-sm text-blue-600 hover:text-blue-500">
                                 비밀번호 찾기
                             </Link>
                         </div>
+
+                        {loginError && <div className="text-red-500 text-sm text-center">{loginError}</div>}
 
                         <button
                             type="submit"
@@ -111,7 +149,6 @@ export default function LoginPage() {
                         </button>
                     </form>
 
-                    {/* Social Login */}
                     {/* <div className="mt-6">
                         <div className="relative">
                             <div className="absolute inset-0 flex items-center">
@@ -134,7 +171,6 @@ export default function LoginPage() {
                         </div>
                     </div> */}
 
-                    {/* Sign Up Link */}
                     <div className="mt-6 text-center">
                         <span className="text-gray-600">계정이 없으신가요? </span>
                         <Link href="/signup" className="text-blue-600 hover:text-blue-500 font-medium">
