@@ -50,7 +50,7 @@ export default function MyPage() {
                         {/* Tab Content */}
                         <div className="p-6">
                             {activeTab === 'planner' && <TravelPlanner />}
-                            {activeTab === 'trips' && <MyTrips />}
+                            {/* {activeTab === 'trips' && <MyTrips />} */}
                             {activeTab === 'profile' && <UserProfile />}
                         </div>
                     </div>

@@ -1,72 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { supabase } from '../../lib/supabase.js'
+import { useUserProfile } from '../../hooks/useUserProfile'
 import { Users, Users2 } from 'lucide-react'
 
 export default function UserProfile() {
-    const [isEditing, setIsEditing] = useState(false)
-    const [profile, setProfile] = useState<any>(null)
+    const { isEditing, setIsEditing, profile, editForm, setEditForm, handleSave, handleCancel } = useUserProfile()
 
-    const [editForm, setEditForm] = useState(profile)
-
-    const handleSave = () => {
-        setProfile(editForm)
-        setIsEditing(false)
-    }
-
-    const handleCancel = () => {
-        setEditForm(profile)
-        setIsEditing(false)
-    }
-
-    useEffect(() => {
-        const fetchProfile = async () => {
-            try {
-                const {
-                    data: { user },
-                } = await supabase.auth.getUser()
-                if (!user) {
-                    setProfile(null)
-                    return
-                }
-
-                // 일단 user 테이블로 테스트
-                setProfile({
-                    name: user.user_metadata?.name ?? '사용자',
-                    email: user.email ?? 'user@example.com',
-                    bio: user.user_metadata?.bio ?? '자기소개를 입력해주세요.',
-                    interests: Array.isArray(user.user_metadata?.interests)
-                        ? user.user_metadata.interests
-                        : ['여행', '문화'],
-                    birthDate: user.user_metadata?.birthDate ?? '1990-01-01',
-                    gender: user.user_metadata?.gender ?? 'male',
-                })
-            } catch (error) {
-                console.error('프로필 로딩 중 에러:', error)
-                // 에러 발생 시 기본 프로필 설정
-                setProfile({
-                    name: '사용자',
-                    email: 'user@example.com',
-                    bio: '자기소개를 입력해주세요.',
-                    interests: ['여행', '문화'],
-                    birthDate: '1990-01-01',
-                    gender: 'male',
-                })
-            }
-        }
-
-        fetchProfile()
-    }, [])
-
-    // profile이 null이 아닐 때만 editForm을 초기화
-    useEffect(() => {
-        if (profile) {
-            setEditForm(profile)
-        }
-    }, [profile])
-
-    if (!profile) {
+    if (!profile || !editForm) {
         return (
             <div className="space-y-6">
                 <div className="flex justify-between items-center">
@@ -77,12 +17,27 @@ export default function UserProfile() {
         )
     }
 
-    // 이렇게 선택형으로 할건지, 입력형으로 할건지, 둘 다 할건지 고민중
-    const travelStyles = [
-        { id: 'relax', name: '휴식형' },
-        { id: 'adventure', name: '모험형' },
-        { id: 'culture', name: '문화탐방형' },
-        { id: 'food', name: '미식형' },
+    // gender select 옵션
+    const genderOptions = [
+        { value: 'male', label: '남자' },
+        { value: 'female', label: '여자' },
+        { value: 'private', label: '비공개' },
+    ]
+
+    // interests 예시 (실제 프로젝트에 맞게 수정 가능)
+    const interestGroups = [
+        {
+            label: '여행 스타일',
+            options: ['혼자', '커플', '가족'],
+        },
+        {
+            label: '여행 테마',
+            options: ['등산', '바다', '호캉스'],
+        },
+        {
+            label: '취미/활동',
+            options: ['사진촬영', '액티비티'],
+        },
     ]
 
     return (
@@ -120,13 +75,27 @@ export default function UserProfile() {
                 <div className="flex items-start space-x-6">
                     {/* Avatar */}
                     <div className="relative">
-                        <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                            <span className="text-white text-2xl font-bold">{profile.name.charAt(0)}</span>
+                        <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center overflow-hidden">
+                            {editForm.profile_img ? (
+                                <img
+                                    src={editForm.profile_img}
+                                    alt="프로필 이미지"
+                                    className="w-full h-full object-cover"
+                                />
+                            ) : (
+                                <span className="text-white text-2xl font-bold">
+                                    {(editForm.nickname || editForm.name).charAt(0)}
+                                </span>
+                            )}
                         </div>
                         {isEditing && (
-                            <button className="absolute -bottom-2 -right-2 w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors">
-                                <i className="ri-camera-line text-sm"></i>
-                            </button>
+                            <input
+                                type="text"
+                                placeholder="프로필 이미지 URL"
+                                value={editForm.profile_img || ''}
+                                onChange={(e) => setEditForm({ ...editForm, profile_img: e.target.value })}
+                                className="mt-2 w-full px-2 py-1 border border-gray-300 rounded"
+                            />
                         )}
                     </div>
 
@@ -135,18 +104,17 @@ export default function UserProfile() {
                         {!isEditing ? (
                             <div className="space-y-3">
                                 <div>
-                                    <h3 className="text-xl font-bold text-gray-800">{profile.name}</h3>
-                                    <p className="text-gray-600">{profile.email}</p>
+                                    <h3 className="text-xl font-bold text-gray-800">
+                                        {profile.nickname || profile.name}
+                                    </h3>
                                 </div>
-                                <p className="text-gray-700">{profile.bio}</p>
+                                <p className="text-gray-700">{profile.introduce}</p>
                                 <div className="flex flex-wrap gap-2">
                                     {(profile.interests ?? []).map((interest: any) => (
                                         <span
                                             key={interest}
                                             className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm flex items-center space-x-1"
                                         >
-                                            {/* 아이콘이 필요하다면 interest에 따라 조건부 렌더링 -> 일단 킵 */}
-                                            {/* <i className="ri-star-line"></i> */}
                                             <span>{interest}</span>
                                         </span>
                                     ))}
@@ -156,29 +124,32 @@ export default function UserProfile() {
                             <div className="space-y-4">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">이름</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">닉네임</label>
                                         <input
                                             type="text"
-                                            value={editForm.name ?? ''}
-                                            onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                                            value={editForm.nickname}
+                                            onChange={(e) => setEditForm({ ...editForm, nickname: e.target.value })}
+                                            placeholder={editForm.name}
                                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">이메일</label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            이름(변경 불가)
+                                        </label>
                                         <input
-                                            type="email"
-                                            value={editForm.email}
-                                            onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            type="text"
+                                            value={editForm.name}
+                                            disabled
+                                            className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-100 text-gray-400"
                                         />
                                     </div>
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">자기소개</label>
                                     <textarea
-                                        value={editForm.bio}
-                                        onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })}
+                                        value={editForm.introduce}
+                                        onChange={(e) => setEditForm({ ...editForm, introduce: e.target.value })}
                                         rows={3}
                                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                     />
@@ -203,7 +174,9 @@ export default function UserProfile() {
                             </div>
                             <div className="flex justify-between">
                                 <span className="text-gray-600">성별</span>
-                                <span className="text-gray-800">{profile.gender === 'male' ? '남성' : '여성'}</span>
+                                <span className="text-gray-800">
+                                    {genderOptions.find((opt) => opt.value === profile.gender)?.label || '비공개'}
+                                </span>
                             </div>
                         </div>
                     ) : (
@@ -219,28 +192,17 @@ export default function UserProfile() {
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">성별</label>
-                                <div className="flex space-x-4">
-                                    <label className="flex items-center">
-                                        <input
-                                            type="radio"
-                                            value="male"
-                                            checked={editForm.gender === 'male'}
-                                            onChange={(e) => setEditForm({ ...editForm, gender: e.target.value })}
-                                            className="mr-2"
-                                        />
-                                        남성
-                                    </label>
-                                    <label className="flex items-center">
-                                        <input
-                                            type="radio"
-                                            value="female"
-                                            checked={editForm.gender === 'female'}
-                                            onChange={(e) => setEditForm({ ...editForm, gender: e.target.value })}
-                                            className="mr-2"
-                                        />
-                                        여성
-                                    </label>
-                                </div>
+                                <select
+                                    value={editForm.gender}
+                                    onChange={(e) => setEditForm({ ...editForm, gender: e.target.value as any })}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                >
+                                    {genderOptions.map((opt) => (
+                                        <option key={opt.value} value={opt.value}>
+                                            {opt.label}
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
                         </div>
                     )}
@@ -249,7 +211,6 @@ export default function UserProfile() {
                 {/* Travel Preferences */}
                 <div className="bg-white rounded-xl border border-gray-200 p-6">
                     <h3 className="text-lg font-semibold text-gray-800 mb-4">여행 취향</h3>
-
                     <div className="space-y-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">관심사</label>
@@ -260,65 +221,45 @@ export default function UserProfile() {
                                             key={interest}
                                             className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm flex items-center space-x-1"
                                         >
-                                            {/* 아이콘이 필요하다면 interest에 따라 조건부 렌더링 */}
-                                            {/* <i className="ri-star-line"></i> */}
                                             <span>{interest}</span>
                                         </span>
                                     ))}
                                 </div>
                             ) : (
-                                <div className="grid grid-cols-2 gap-2">
-                                    {(profile.interests ?? []).map((interest: any) => (
-                                        <label key={interest} className="flex items-center space-x-2 cursor-pointer">
-                                            <input
-                                                type="checkbox"
-                                                checked={editForm.interests.includes(interest)}
-                                                onChange={(e) => {
-                                                    if (e.target.checked) {
-                                                        setEditForm({
-                                                            ...editForm,
-                                                            interests: [...editForm.interests, interest],
-                                                        })
-                                                    } else {
-                                                        setEditForm({
-                                                            ...editForm,
-                                                            interests: editForm.interests.filter(
-                                                                (i: any) => i !== interest,
-                                                            ),
-                                                        })
-                                                    }
-                                                }}
-                                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                                            />
-                                            {/* <i className="ri-star-line"></i> */}
-                                            <span className="text-sm">{interest}</span>
-                                        </label>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">여행 스타일</label>
-                            {!isEditing ? (
-                                <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
-                                    {travelStyles.find((s) => s.id === profile.travelStyle)?.name ?? '설정 안됨'}
-                                </span>
-                            ) : (
-                                <div className="space-y-2">
-                                    {(travelStyles ?? []).map((style) => (
-                                        <label key={style.id} className="flex items-center cursor-pointer">
-                                            <input
-                                                type="radio"
-                                                value={style.id}
-                                                checked={editForm.travelStyle === style.id}
-                                                onChange={(e) =>
-                                                    setEditForm({ ...editForm, travelStyle: e.target.value })
-                                                }
-                                                className="mr-2"
-                                            />
-                                            <span className="text-sm">{style.name}</span>
-                                        </label>
+                                <div className="flex flex-wrap gap-2">
+                                    {interestGroups.map((group) => (
+                                        <div key={group.label} className="mb-2">
+                                            <div className="font-semibold text-gray-700 mb-1">{group.label}</div>
+                                            <div className="flex flex-wrap gap-2">
+                                                {group.options.map((option) => (
+                                                    <label
+                                                        key={option}
+                                                        className="flex items-center space-x-2 cursor-pointer"
+                                                    >
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={editForm.interests.includes(option)}
+                                                            onChange={(e) => {
+                                                                if (e.target.checked) {
+                                                                    setEditForm({
+                                                                        ...editForm,
+                                                                        interests: [...editForm.interests, option],
+                                                                    })
+                                                                } else {
+                                                                    setEditForm({
+                                                                        ...editForm,
+                                                                        interests: editForm.interests.filter(
+                                                                            (i) => i !== option,
+                                                                        ),
+                                                                    })
+                                                                }
+                                                            }}
+                                                        />
+                                                        <span>{option}</span>
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        </div>
                                     ))}
                                 </div>
                             )}
@@ -338,23 +279,6 @@ export default function UserProfile() {
                         </div>
                         <i className="ri-arrow-right-s-line text-gray-400"></i>
                     </button>
-
-                    {/* <button className="w-full text-left px-4 py-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                            <i className="ri-notification-line text-gray-500"></i>
-                            <span>알림 설정</span>
-                        </div>
-                        <i className="ri-arrow-right-s-line text-gray-400"></i>
-                    </button> */}
-
-                    <button className="w-full text-left px-4 py-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                            <i className="ri-shield-line text-gray-500"></i>
-                            <span>개인정보 설정</span>
-                        </div>
-                        <i className="ri-arrow-right-s-line text-gray-400"></i>
-                    </button>
-
                     <button className="w-full text-left px-4 py-3 border border-red-200 rounded-lg hover:bg-red-50 transition-colors flex items-center justify-between text-red-600">
                         <div className="flex items-center space-x-3">
                             <i className="ri-delete-bin-line"></i>
