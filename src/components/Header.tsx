@@ -2,7 +2,6 @@
 
 import Link from 'next/link'
 
-
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supsbaseClient'
 import { useRouter } from 'next/navigation'
@@ -53,6 +52,9 @@ export default function Header() {
                     <nav className="hidden md:flex items-center space-x-8">
                         <Link href="/" className="text-gray-600 hover:text-blue-600 transition-colors">
                             홈
+                        </Link>
+                        <Link href="/places" className="text-gray-600 hover:text-blue-600 transition-colors">
+                            여행지
                         </Link>
                         <Link href="/board" className="text-gray-600 hover:text-blue-600 transition-colors">
                             여행 후기
