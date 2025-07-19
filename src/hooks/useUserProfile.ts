@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '../lib/supabase.js'
+import { supabase } from '../lib/supabase'
 
 export interface UserProfileType {
     name: string
