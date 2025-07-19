@@ -13,7 +13,6 @@ export interface UserProfileType {
 }
 
 export function useUserProfile() {
-    // 프로필 관련 상태
     const [isEditing, setIsEditing] = useState(false)
     const [profile, setProfile] = useState<UserProfileType | null>(null)
     const [editForm, setEditForm] = useState<UserProfileType | null>(null)
@@ -21,7 +20,6 @@ export function useUserProfile() {
     const [newInterest, setNewInterest] = useState('')
     const [nicknameError, setNicknameError] = useState<string | null>(null)
 
-    // 비밀번호 변경 관련 상태
     const [showPasswordChange, setShowPasswordChange] = useState(false)
     const [currentPassword, setCurrentPassword] = useState('')
     const [newPassword, setNewPassword] = useState('')
@@ -32,7 +30,6 @@ export function useUserProfile() {
     const [newPasswordValid, setNewPasswordValid] = useState<boolean | null>(null)
     const [passwordsMatch, setPasswordsMatch] = useState<boolean | null>(null)
 
-    // 프로필 불러오기
     useEffect(() => {
         const fetchProfile = async () => {
             const {
@@ -63,7 +60,6 @@ export function useUserProfile() {
         if (profile) setEditForm(profile)
     }, [profile])
 
-    // 프로필 저장
     const handleSave = async () => {
         if (!editForm) return
         const {
@@ -97,7 +93,6 @@ export function useUserProfile() {
         setIsEditing(false)
     }
 
-    // 닉네임 중복 체크
     const checkNicknameDuplicate = async (nickname: string) => {
         if (!nickname.trim()) return
         const { data } = await supabase.from('user_profile').select('user_id').eq('nickname', nickname).single()
@@ -112,7 +107,6 @@ export function useUserProfile() {
         return true
     }
 
-    // 프로필 이미지 업로드
     const handleImageUpload = async (file: File) => {
         if (!file || !editForm) return
         const {
@@ -132,7 +126,6 @@ export function useUserProfile() {
         setEditForm({ ...editForm, profile_img: publicUrlData.publicUrl })
     }
 
-    // 관심사 추가/삭제
     const handleAddCustomInterest = () => {
         if (!newInterest.trim() || !editForm) return
         if (editForm.interests.includes(newInterest.trim())) {
@@ -153,7 +146,6 @@ export function useUserProfile() {
         })
     }
 
-    // 계정 삭제
     const handleDeleteAccount = async () => {
         const confirmed = window.confirm('정말로 계정을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')
         if (!confirmed) return
@@ -194,7 +186,6 @@ export function useUserProfile() {
         window.location.href = '/'
     }
 
-    // 비밀번호 변경
     const handlePasswordChange = async () => {
         setPasswordError(null)
         setPasswordSuccess(null)
@@ -235,7 +226,6 @@ export function useUserProfile() {
         setConfirmPassword('')
     }
 
-    // 현재 비밀번호 확인
     const checkCurrentPassword = async () => {
         setPasswordError(null)
         setCurrentPasswordValid(null)
@@ -259,7 +249,6 @@ export function useUserProfile() {
         }
     }
 
-    // 새 비밀번호 유효성 검사
     const validateNewPassword = (pw: string) => {
         const valid =
             pw.length >= 8 &&
