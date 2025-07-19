@@ -1,16 +1,11 @@
 'use client'
 
-import { useState } from 'react'
-
 import Header from '../../components/Header'
 import Footer from '../../components/Footer'
 import PlaceList from './PlaceList'
-import PlaceDetail from './PlaceDetail'
 
 export default function PlacesPage() {
-    const [selectedPlace, setSelectedPlace] = useState<number | null>(null)
-
-    const handleAddToTrip = (placeId: number) => {
+    const handleAddToTrip = (placeId: string) => {
         console.log('Add to trip:', placeId)
     }
 
@@ -25,15 +20,7 @@ export default function PlacesPage() {
                         <p className="text-gray-600">다음 여행을 위한 특별한 장소를 찾아보세요</p>
                     </div>
 
-                    {selectedPlace ? (
-                        <PlaceDetail placeId={selectedPlace} onBack={() => setSelectedPlace(null)} />
-                    ) : (
-                        <PlaceList
-                            onSelectPlace={setSelectedPlace}
-                            selectedPlaceId={selectedPlace}
-                            onAddToTrip={handleAddToTrip}
-                        />
-                    )}
+                    <PlaceList onAddToTrip={handleAddToTrip} />
                 </div>
             </div>
 

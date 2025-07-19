@@ -5,7 +5,7 @@ export interface PaginationProps {
     totalCount: number
     pageSize: number
     pageGroupSize: number
-    onPageChange: (page: number) => void
+    onPageChange: (page: number, byArrow?: boolean) => void
 }
 
 export default function Pagination({
@@ -25,7 +25,7 @@ export default function Pagination({
         <div className="flex justify-center items-center space-x-2 mt-8">
             <button
                 className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
-                onClick={() => onPageChange(Math.max(1, groupStart - pageGroupSize))}
+                onClick={() => onPageChange(Math.max(1, groupStart - pageGroupSize), true)}
                 disabled={groupStart === 1}
             >
                 <i className="ri-arrow-left-line"></i>
@@ -36,14 +36,14 @@ export default function Pagination({
                     className={`px-4 py-2 rounded-lg transition-colors ${
                         page === currentPage ? 'bg-blue-500 text-white' : 'border border-gray-300 hover:bg-gray-50'
                     }`}
-                    onClick={() => onPageChange(page)}
+                    onClick={() => onPageChange(page, false)}
                 >
                     {page}
                 </button>
             ))}
             <button
                 className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
-                onClick={() => onPageChange(Math.min(totalPages, groupStart + pageGroupSize))}
+                onClick={() => onPageChange(Math.min(totalPages, groupStart + pageGroupSize), true)}
                 disabled={groupEnd === totalPages}
             >
                 <i className="ri-arrow-right-line"></i>
