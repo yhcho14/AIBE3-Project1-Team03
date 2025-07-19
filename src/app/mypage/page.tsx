@@ -5,6 +5,7 @@ import Footer from '../../components/Footer'
 import TravelPlanner from './TravelPlanner'
 import UserProfile from './UserProfile'
 import MyTrips from './MyTrips'
+import TravelDetail from './TravelDetail'
 import { useState } from 'react'
 
 export default function MyPage() {
@@ -12,7 +13,7 @@ export default function MyPage() {
 
     const tabs = [
         { id: 'planner', name: '여행 플래너', icon: 'ri-calendar-line' },
-        //{ id: 'trips', name: '내 여행', icon: 'ri-map-2-line' },
+        { id: 'trips', name: '여행 세부계획', icon: 'ri-map-2-line' },
         { id: 'profile', name: '프로필', icon: 'ri-user-line' },
     ]
 
@@ -51,6 +52,7 @@ export default function MyPage() {
                         <div className="p-6">
                             {activeTab === 'planner' && <TravelPlanner />}
                             {/* {activeTab === 'trips' && <MyTrips />} */}
+                            {activeTab === 'trips' && <TravelDetail />}
                             {activeTab === 'profile' && <UserProfile />}
                         </div>
                     </div>

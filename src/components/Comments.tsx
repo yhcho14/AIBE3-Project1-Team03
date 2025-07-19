@@ -2,14 +2,26 @@
 
 import { useEffect, useState } from 'react'
 import { useComments, CommentFormData } from '../hooks/useComments'
-import { supabase } from '../lib/supabase'
+import { supabase, getUserNames } from '../lib/supabase'
 
 interface CommentsProps {
     postId: string
 }
 
+interface CommentWithUserName {
+    id: number
+    content: string
+    title?: string
+    user_id: string
+    post_id: number
+    created_at: string
+    modified_at: string
+    user_name?: string
+}
+
 export default function Comments({ postId }: CommentsProps) {
     const { comments, loading, error, isSubmitting, addComment, updateComment, deleteComment } = useComments(postId)
+    const [commentsWithNames, setCommentsWithNames] = useState<CommentWithUserName[]>([])
 
     const [newComment, setNewComment] = useState('')
     const [editingComment, setEditingComment] = useState<number | null>(null)
@@ -25,6 +37,27 @@ export default function Comments({ postId }: CommentsProps) {
         }
         getUser()
     }, [])
+
+    // 댓글에 사용자 이름 추가
+    useEffect(() => {
+        const fetchUserNames = async () => {
+            if (comments.length > 0) {
+                const userIds = comments.map(comment => comment.user_id);
+                const userNames = await getUserNames(userIds);
+                
+                const commentsWithUserNames = comments.map(comment => ({
+                    ...comment,
+                    user_name: userNames[comment.user_id] || '익명'
+                }));
+                
+                setCommentsWithNames(commentsWithUserNames);
+            } else {
+                setCommentsWithNames([]);
+            }
+        }
+        
+        fetchUserNames();
+    }, [comments]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -106,7 +139,7 @@ export default function Comments({ postId }: CommentsProps) {
                         아직 댓글이 없습니다. 첫 번째 댓글을 작성해보세요!
                     </div>
                 ) : (
-                    comments.map((comment) => (
+                    commentsWithNames.map((comment) => (
                         <div key={comment.id} className="border-b border-gray-100 pb-4 last:border-b-0">
                             {editingComment === comment.id ? (
                                 // 수정 모드
@@ -140,11 +173,11 @@ export default function Comments({ postId }: CommentsProps) {
                                         <div className="flex items-center space-x-2">
                                             <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
                                                 <span className="text-white text-sm font-bold">
-                                                    {comment.user_id?.slice(0, 1)}
+                                                    {comment.user_name?.slice(0, 1) || '익'}
                                                 </span>
                                             </div>
                                             <span className="font-medium text-gray-800">
-                                                {comment.user_id || '익명'}
+                                                {comment.user_name || '익명'}
                                             </span>
                                             <span className="text-sm text-gray-500">
                                                 {new Date(comment.created_at).toLocaleDateString()}

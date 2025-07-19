@@ -1,6 +1,8 @@
 'use client'
 
 import { useUserProfile } from '../../hooks/useUserProfile'
+import { useEffect, useState } from 'react'
+import { supabase } from '../../lib/supabase'
 import { Users, Users2 } from 'lucide-react'
 
 export default function UserProfile() {
