@@ -1,7 +1,6 @@
 'use client'
 
 import Link from 'next/link'
-
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useRouter } from 'next/navigation'
@@ -11,6 +10,7 @@ export default function Header() {
     const [isLoggedIn, setIsLoggedIn] = useState(false)
     const [user, setUser] = useState<User | null>(null)
     const router = useRouter()
+    const [profileImg, setProfileImg] = useState<string>('')
 
     useEffect(() => {
         const getSession = async () => {
@@ -29,6 +29,18 @@ export default function Header() {
         })
         return () => subscription.unsubscribe()
     }, [])
+
+    useEffect(() => {
+        const fetchProfileImg = async () => {
+            if (!user) {
+                setProfileImg('')
+                return
+            }
+            const { data } = await supabase.from('user_profile').select('profile_img').eq('user_id', user.id).single()
+            setProfileImg(data?.profile_img ?? '')
+        }
+        fetchProfileImg()
+    }, [user])
 
     const handleLogout = async () => {
         await supabase.auth.signOut()
@@ -81,8 +93,16 @@ export default function Header() {
                         ) : (
                             <div className="flex items-center space-x-4">
                                 <Link href="/mypage">
-                                    <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                                        <i className="ri-user-fill text-gray-600"></i>
+                                    <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center overflow-hidden">
+                                        {profileImg ? (
+                                            <img
+                                                src={profileImg}
+                                                alt="프로필 이미지"
+                                                className="w-full h-full object-cover"
+                                            />
+                                        ) : (
+                                            <i className="ri-user-3-line text-white text-lg"></i>
+                                        )}
                                     </div>
                                 </Link>
                                 <button
