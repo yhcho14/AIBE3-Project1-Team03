@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { supabase } from '../../lib/supabase'
 
 interface TravelPlan {
     id: number
@@ -15,7 +16,7 @@ interface TravelPlan {
     notes: string
     createdAt: string
     status: 'draft' | 'confirmed' | 'completed'
-    schedule: {
+    schedule?: {
         title: string
         startTime: Date
         endTime: Date
@@ -93,6 +94,7 @@ const samplePlans: TravelPlan[] = [
 ]
 
 export default function TravelPlanner() {
+    const [loading, setLoading] = useState(true)
     const [plans, setPlans] = useState<TravelPlan[]>(samplePlans)
     const [selectedPlan, setSelectedPlan] = useState<TravelPlan | null>(null)
     const [isCreating, setIsCreating] = useState(false)
@@ -102,10 +104,66 @@ export default function TravelPlanner() {
         startDate: '',
         endDate: '',
         transportation: '',
-        accommodation: '',
+        //accommodation: '',
         estimatedCost: 0,
         notes: '',
     })
+
+    useEffect(() => {
+        const fetchPlans = async () => {
+            // 1. 현재 로그인된 사용자 가져오기
+            const {
+                data: { user },
+                error: authError,
+            } = await supabase.auth.getUser()
+
+            if (authError || !user) {
+                console.error('로그인한 유저 정보를 가져오는 데 실패했습니다:', authError?.message)
+                setLoading(false)
+                return
+            }
+
+            const userId = user.id
+            console.log('현재 로그인한 유저 ID:', userId)
+            // 2. 해당 유저의 여행 계획 불러오기
+            const { data, error } = await supabase.from('travel').select('*').eq('user_id', userId)
+
+            const travelPlans: TravelPlan[] = (data ?? []).map((item) => ({
+                id: item.id,
+                title: item.title,
+                numTravelers: item.num_travelers,
+                startDate: new Date(item.start_date).toISOString().slice(0, 10),
+                endDate: new Date(item.end_date).toISOString().slice(0, 10),
+                durationDays: item.travel_duration,
+                transportation: item.transportation,
+                accommodation: item.accommodation,
+                estimatedCost: item.budget,
+                notes: item.note,
+                createdAt: new Date(item.created_at).toISOString().slice(0, 10),
+                status: item.status,
+                schedule: [
+                    {
+                        title: item.title,
+                        startTime: new Date(item.start_date + 'T10:00:00'),
+                        endTime: new Date(item.end_date + 'T18:00:00'),
+                        note: item.notes,
+                    },
+                ],
+            }))
+
+            if (error) {
+                console.error('여행 데이터 가져오기 실패:', error.message)
+            } else {
+                console.log('여행 데이터 가져오기 성공:', data)
+                //setPlans(data as TravelPlan[])
+                setPlans([...travelPlans, ...plans])
+            }
+
+            setLoading(false)
+        }
+
+        fetchPlans()
+    }, [])
 
     const calculateDuration = (start: string, end: string) => {
         if (!start || !end) return 0

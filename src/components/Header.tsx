@@ -3,7 +3,7 @@
 import Link from 'next/link'
 
 import { useEffect, useState } from 'react'
-import { supabase } from '../lib/supabase.js'
+import { supabase } from '../lib/supabase'
 import { useRouter } from 'next/navigation'
 import { User } from '@supabase/supabase-js'
 

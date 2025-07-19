@@ -36,7 +36,7 @@ export default function Home() {
                     <AISearchBar />
                 </div>
             </section>
-
+            <recommendedDestinations />
             {/* Popular Destinations */}
             <PopularDestinations />
 
