@@ -8,6 +8,7 @@ import TravelPlanCard from './TravelPlanCard'
 interface TravelPlan {
     id: number
     title: string
+    destination?: string
     numTravelers: number
     startDate: string
     endDate: string
@@ -26,84 +27,20 @@ interface TravelPlan {
     }[]
 }
 
-const samplePlans: TravelPlan[] = [
-    {
-        id: 1,
-        title: '부산 바다 여행',
-        numTravelers: 2,
-        startDate: '2024-07-16',
-        endDate: '2024-07-18',
-        durationDays: 3,
-        transportation: 'KTX',
-        accommodation: '해운대 호텔',
-        estimatedCost: 450000,
-        notes: 'AI 추천으로 생성된 부산 여행 계획입니다.',
-        createdAt: '2024-01-15',
-        status: 'draft',
-        schedule: [
-            {
-                title: '부산 바다 여행',
-                startTime: new Date('2024-07-16T10:00:00'),
-                endTime: new Date('2024-07-18T18:00:00'),
-                note: '부산 바다 여행 계획입니다.',
-            },
-        ],
-    },
-    {
-        id: 2,
-        title: '제주도 힐링 여행',
-        numTravelers: 4,
-        startDate: '2024-08-10',
-        endDate: '2024-08-13',
-        durationDays: 4,
-        transportation: '항공편',
-        accommodation: '서귀포 펜션',
-        estimatedCost: 680000,
-        notes: '가족과 함께하는 제주도 여행',
-        createdAt: '2024-01-10',
-        status: 'confirmed',
-        schedule: [
-            {
-                title: '제주도 힐링 여행',
-                startTime: new Date('2024-08-10T10:00:00'),
-                endTime: new Date('2024-08-13T18:00:00'),
-                note: '제주도 힐링 여행 계획입니다.',
-            },
-        ],
-    },
-    {
-        id: 3,
-        title: '경주 역사 탐방',
-        numTravelers: 4,
-        startDate: '2023-12-20',
-        endDate: '2023-12-22',
-        durationDays: 3,
-        transportation: '고속버스',
-        accommodation: '경주 게스트하우스',
-        estimatedCost: 280000,
-        notes: '역사와 문화를 체험하는 여행',
-        createdAt: '2023-12-01',
-        status: 'completed',
-        schedule: [
-            {
-                title: '경주 역사 탐방',
-                startTime: new Date('2023-12-20T10:00:00'),
-                endTime: new Date('2023-12-22T18:00:00'),
-                note: '경주 역사 탐방 계획입니다.',
-            },
-        ],
-    },
-]
+interface TravelPlannerProps {
+    onDetailView: (travelId: number) => void
+}
 
-export default function TravelPlanner() {
+export default function TravelPlanner({ onDetailView }: TravelPlannerProps) {
     const [loading, setLoading] = useState(true)
-    const [plans, setPlans] = useState<TravelPlan[]>(samplePlans)
+    const [plans, setPlans] = useState<TravelPlan[]>([])
     //const [selectedPlan, setSelectedPlan] = useState<TravelPlan | null>(null)
     const [isEditing, setIsEditing] = useState(false)
     const [editingPlan, setEditingPlan] = useState<TravelPlan | null>(null)
     const [isCreating, setIsCreating] = useState(false)
     const [newPlan, setNewPlan] = useState<Partial<TravelPlan>>({
         title: '',
+        destination: '',
         numTravelers: 0,
         startDate: '',
         endDate: '',
@@ -135,6 +72,7 @@ export default function TravelPlanner() {
             const travelPlans: TravelPlan[] = (data ?? []).map((item) => ({
                 id: item.id,
                 title: item.title,
+                destination: item.destination,
                 numTravelers: item.num_travelers,
                 startDate: new Date(item.start_date).toISOString().slice(0, 10),
                 endDate: new Date(item.end_date).toISOString().slice(0, 10),
@@ -159,8 +97,11 @@ export default function TravelPlanner() {
                 console.error('여행 데이터 가져오기 실패:', error.message)
             } else {
                 console.log('여행 데이터 가져오기 성공:', data)
-                //setPlans(data as TravelPlan[])
-                setPlans([...travelPlans, ...plans])
+                // 여행 시작일 기준 내림차순 정렬 (최신 여행이 위로)
+                const sortedPlans = travelPlans.sort((a, b) => {
+                    return new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
+                })
+                setPlans(sortedPlans)
             }
 
             setLoading(false)
@@ -177,38 +118,95 @@ export default function TravelPlanner() {
         return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
     }
 
-    const handleCreatePlan = () => {
+    const handleCreatePlan = async () => {
         if (!newPlan.title || !newPlan.startDate || !newPlan.endDate) {
             alert('필수 정보를 모두 입력해주세요.')
             return
         }
 
-        const plan: TravelPlan = {
-            id: Date.now(),
-            title: newPlan.title || '',
-            numTravelers: newPlan.numTravelers || 0,
-            startDate: newPlan.startDate || '',
-            endDate: newPlan.endDate || '',
-            durationDays: calculateDuration(newPlan.startDate || '', newPlan.endDate || ''),
-            transportation: newPlan.transportation || '',
-            accommodation: newPlan.accommodation || '',
-            estimatedCost: newPlan.estimatedCost || 0,
-            notes: newPlan.notes || '',
-            createdAt: new Date().toISOString().split('T')[0],
-            status: 'draft',
-            schedule: [
-                {
-                    title: newPlan.title || '',
-                    startTime: new Date(newPlan.startDate || ''),
-                    endTime: new Date(newPlan.endDate || ''),
-                    note: newPlan.notes || '',
-                },
-            ],
+        try {
+            // 1. 현재 로그인된 사용자 가져오기
+            const {
+                data: { user },
+                error: authError,
+            } = await supabase.auth.getUser()
+
+            if (authError || !user) {
+                console.error('로그인한 유저 정보를 가져오는 데 실패했습니다:', authError?.message)
+                alert('로그인이 필요합니다.')
+                return
+            }
+
+            // 2. supabase에 저장할 데이터 준비
+            const travelData = {
+                user_id: user.id,
+                title: newPlan.title,
+                destination: newPlan.destination || null,
+                num_travelers: newPlan.numTravelers || 1,
+                start_date: newPlan.startDate,
+                end_date: newPlan.endDate,
+                travel_duration: calculateDuration(newPlan.startDate || '', newPlan.endDate || ''),
+                transportation: newPlan.transportation || null,
+                accommodation: newPlan.accommodation || null,
+                budget: newPlan.estimatedCost || 0,
+                note: newPlan.notes || null,
+                status: 'draft',
+            }
+
+            // 3. supabase travel 테이블에 삽입
+            const { data, error } = await supabase.from('travel').insert([travelData]).select()
+
+            if (error) {
+                console.error('여행 계획 저장 실패:', error.message)
+                alert('여행 계획 저장에 실패했습니다. 다시 시도해주세요.')
+                return
+            }
+
+            if (data && data.length > 0) {
+                // 4. 저장된 데이터로 로컬 상태 업데이트
+                const savedPlan = data[0]
+                const plan: TravelPlan = {
+                    id: savedPlan.id,
+                    title: savedPlan.title,
+                    destination: savedPlan.destination,
+                    numTravelers: savedPlan.num_travelers,
+                    startDate: new Date(savedPlan.start_date).toISOString().slice(0, 10),
+                    endDate: new Date(savedPlan.end_date).toISOString().slice(0, 10),
+                    durationDays: savedPlan.travel_duration,
+                    transportation: savedPlan.transportation,
+                    accommodation: savedPlan.accommodation,
+                    estimatedCost: savedPlan.budget,
+                    notes: savedPlan.note,
+                    createdAt: new Date(savedPlan.created_at).toISOString().slice(0, 10),
+                    status: savedPlan.status,
+                    schedule: [
+                        {
+                            title: savedPlan.title,
+                            startTime: new Date(savedPlan.start_date + 'T10:00:00'),
+                            endTime: new Date(savedPlan.end_date + 'T18:00:00'),
+                            note: savedPlan.note || '',
+                        },
+                    ],
+                }
+
+                // 새 여행을 추가하고 날짜순으로 정렬
+                const newPlans = [plan, ...plans].sort((a, b) => {
+                    return new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
+                })
+                setPlans(newPlans)
+                console.log('여행 계획 저장 성공:', savedPlan)
+                alert('여행 계획이 성공적으로 저장되었습니다!')
+            }
+        } catch (err) {
+            console.error('예외 발생:', err)
+            alert('여행 계획 저장 중 오류가 발생했습니다.')
+            return
         }
 
-        setPlans([plan, ...plans])
+        // 5. 입력 폼 초기화
         setNewPlan({
             title: '',
+            destination: '',
             numTravelers: 0,
             startDate: '',
             endDate: '',
@@ -227,9 +225,70 @@ export default function TravelPlanner() {
 
     const handleUpdatePlan = (updatedPlan: TravelPlan) => {
         const updatedPlans = plans.map((p) => (p.id === updatedPlan.id ? updatedPlan : p))
-        setPlans(updatedPlans)
+        // 수정 후 날짜순으로 정렬
+        const sortedPlans = updatedPlans.sort((a, b) => {
+            return new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
+        })
+        setPlans(sortedPlans)
         setIsEditing(false)
         setEditingPlan(null)
+    }
+
+    const handleStatusChange = async (planId: number, newStatus: 'confirmed' | 'completed') => {
+        try {
+            const { error } = await supabase.from('travel').update({ status: newStatus }).eq('id', planId)
+
+            if (error) {
+                console.error('상태 업데이트 실패:', error.message)
+                alert('상태 변경에 실패했습니다. 다시 시도해주세요.')
+                return
+            }
+
+            // 로컬 상태 업데이트 후 날짜순으로 정렬
+            const updatedPlans = plans.map((plan) => (plan.id === planId ? { ...plan, status: newStatus } : plan))
+            const sortedPlans = updatedPlans.sort((a, b) => {
+                return new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
+            })
+            setPlans(sortedPlans)
+
+            console.log('상태 업데이트 성공:', { planId, newStatus })
+            alert(newStatus === 'confirmed' ? '여행이 확정되었습니다!' : '여행이 완료되었습니다!')
+        } catch (err) {
+            console.error('예외 발생:', err)
+            alert('상태 변경 중 오류가 발생했습니다.')
+        }
+    }
+
+    const handleDeletePlan = async (planId: number) => {
+        try {
+            // 1. 관련 여행 일정들 먼저 삭제
+            const { error: scheduleError } = await supabase.from('travel_schedule').delete().eq('travel_id', planId)
+
+            if (scheduleError) {
+                console.error('여행 일정 삭제 실패:', scheduleError.message)
+                alert('여행 일정 삭제에 실패했습니다.')
+                return
+            }
+
+            // 2. 여행 계획 삭제
+            const { error } = await supabase.from('travel').delete().eq('id', planId)
+
+            if (error) {
+                console.error('여행 계획 삭제 실패:', error.message)
+                alert('여행 계획 삭제에 실패했습니다. 다시 시도해주세요.')
+                return
+            }
+
+            // 3. 로컬 상태에서 삭제
+            const updatedPlans = plans.filter((plan) => plan.id !== planId)
+            setPlans(updatedPlans)
+
+            console.log('여행 계획 삭제 성공:', planId)
+            alert('여행이 성공적으로 삭제되었습니다.')
+        } catch (err) {
+            console.error('예외 발생:', err)
+            alert('여행 삭제 중 오류가 발생했습니다.')
+        }
     }
 
     const getStatusColor = (status: string) => {
@@ -293,6 +352,17 @@ export default function TravelPlanner() {
                                     value={newPlan.title || ''}
                                     onChange={(e) => setNewPlan({ ...newPlan, title: e.target.value })}
                                     placeholder="예: 부산 바다 여행"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">여행지</label>
+                                <input
+                                    type="text"
+                                    value={newPlan.destination || ''}
+                                    onChange={(e) => setNewPlan({ ...newPlan, destination: e.target.value })}
+                                    placeholder="예: 부산, 제주도, 경주"
                                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 />
                             </div>
@@ -455,6 +525,9 @@ export default function TravelPlanner() {
                         key={plan.id}
                         plan={plan}
                         onEdit={handleEditClick}
+                        onStatusChange={handleStatusChange}
+                        onDetailView={onDetailView}
+                        onDelete={handleDeletePlan}
                         getStatusColor={getStatusColor}
                         getStatusText={getStatusText}
                     />
