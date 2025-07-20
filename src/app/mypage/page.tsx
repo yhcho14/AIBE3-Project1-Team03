@@ -10,6 +10,12 @@ import { useState } from 'react'
 
 export default function MyPage() {
     const [activeTab, setActiveTab] = useState('planner')
+    const [selectedTravelId, setSelectedTravelId] = useState<number | null>(null)
+
+    const handleTravelDetailView = (travelId: number) => {
+        setSelectedTravelId(travelId)
+        setActiveTab('trips')
+    }
 
     const tabs = [
         { id: 'planner', name: '여행 플래너', icon: 'ri-calendar-line' },
@@ -50,9 +56,9 @@ export default function MyPage() {
 
                         {/* Tab Content */}
                         <div className="p-6">
-                            {activeTab === 'planner' && <TravelPlanner />}
+                            {activeTab === 'planner' && <TravelPlanner onDetailView={handleTravelDetailView} />}
                             {/* {activeTab === 'trips' && <MyTrips />} */}
-                            {activeTab === 'trips' && <TravelDetail />}
+                            {activeTab === 'trips' && <TravelDetail selectedTravelId={selectedTravelId} />}
                             {activeTab === 'profile' && <UserProfile />}
                         </div>
                     </div>
