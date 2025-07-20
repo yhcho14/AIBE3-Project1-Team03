@@ -1,13 +1,13 @@
 import { useRouter } from 'next/navigation'
-import { Place } from '../../../lib/types/place'
-import AddToTripButton from './AddToTripButton'
+import { Place } from '../../../lib/types/placeType'
+import AddToTravelButton from './AddToTravelButton'
 
 interface PlaceCardProps {
     place: Place
     filterCategory: string
     PLACE_CONTENT_TYPE_MAP: Map<string, string>
     hoveredPlaceId: string | null
-    onAddToTrip?: (placeId: string) => void
+    onAddToTravel?: (placeId: string) => void
     setHoveredPlaceId: (id: string | null) => void
 }
 
@@ -16,7 +16,7 @@ export default function PlaceCard({
     filterCategory,
     PLACE_CONTENT_TYPE_MAP,
     hoveredPlaceId,
-    onAddToTrip,
+    onAddToTravel,
     setHoveredPlaceId,
 }: PlaceCardProps) {
     const router = useRouter()
@@ -43,15 +43,9 @@ export default function PlaceCard({
                     )}
                 </div>
 
-                <AddToTripButton
-                    hovered={hoveredPlaceId === place.contentid}
-                    onClick={(e) => {
-                        e.stopPropagation()
-                        if (onAddToTrip) onAddToTrip(place.contentid)
-                    }}
-                    onMouseEnter={() => setHoveredPlaceId(place.contentid)}
-                    onMouseLeave={() => setHoveredPlaceId(null)}
-                />
+                <div className="absolute top-4 right-4">
+                    <AddToTravelButton placeId={place.contentid} onAddToTravel={onAddToTravel} />
+                </div>
             </div>
 
             <div className="p-6">
@@ -60,7 +54,7 @@ export default function PlaceCard({
                 </div>
 
                 {place.addr1 && (
-                    <div className="text-xs text-gray-500 mb-2 flex items-center gap-1">
+                    <div className="text-sm text-gray-500 flex items-center gap-1">
                         <i className="ri-map-pin-line text-gray-400"></i>
                         <span>{place.addr1}</span>
                     </div>

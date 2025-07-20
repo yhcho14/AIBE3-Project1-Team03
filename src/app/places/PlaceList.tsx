@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import getPlacesList from '../../lib/public-data-fetcher'
-import { Place } from '../../lib/types/place'
+import getPlacesList from '../../lib/api/public-data-api'
+import { Place } from '../../lib/types/placeType'
 import Dropdown from '../../components/Dropdown'
 import Pagination from '../../components/Pagination'
 import SearchBar from './components/SearchBar'
@@ -38,9 +38,7 @@ const categoryOptions = [
 const API_TYPE_AREA_BASED_LIST = 'areaBasedList2'
 const API_TYPE_SEARCH_KEYWORD_LIST = 'searchKeyword2'
 
-interface PlaceListProps {}
-
-export default function PlaceList({}: PlaceListProps) {
+export default function PlaceList() {
     const [places, setPlaces] = useState<Place[]>([])
     const [sortBy, setSortBy] = useState(sortOptions[0].value)
     const [selectedAreaCode, setSelectedAreaCode] = useState<string | null>(null)
@@ -81,6 +79,10 @@ export default function PlaceList({}: PlaceListProps) {
             setInputValue(searchKeyword)
         })
     }, [currentPage, sortBy, selectedAreaCode, selectedSigunguCode, filterCategory, searchKeyword])
+
+    const handleAddToTravel = (placeId: string) => {
+        console.log('Add to travel:', placeId)
+    }
 
     const handleSearch = (keyword: string) => {
         setSearchKeyword(keyword)
@@ -144,6 +146,7 @@ export default function PlaceList({}: PlaceListProps) {
                                 filterCategory={filterCategory}
                                 PLACE_CONTENT_TYPE_MAP={PLACE_CONTENT_TYPE_MAP}
                                 hoveredPlaceId={hoveredPlaceId}
+                                onAddToTravel={handleAddToTravel}
                                 setHoveredPlaceId={setHoveredPlaceId}
                             />
                         ))}

@@ -129,10 +129,12 @@ export default function LocationSelector({
                             <div className="p-4">
                                 <h3 className="text-sm font-semibold text-gray-800 mb-3">지역 선택</h3>
 
+                                <div className="border-t border-gray-200 mb-4"></div>
+
                                 {/* 시도 선택 */}
                                 <div className="mb-4">
                                     <h4 className="text-xs font-medium text-gray-500 mb-2">시도</h4>
-                                    <div className="grid grid-cols-2 gap-1 p-1">
+                                    <div className="grid grid-cols-2 gap-1">
                                         {Array.from(AREA_CODE_MAP.entries()).map(([code, name]) => (
                                             <button
                                                 key={code}
@@ -159,10 +161,11 @@ export default function LocationSelector({
                                 {/* 시군구 선택 */}
                                 {tempSelectedProvince && SIGUNGU_CODE_MAP.get(tempSelectedProvince) && (
                                     <div ref={sigunguSectionRef}>
+                                        <div className="border-t border-gray-200 mb-4"></div>
                                         <h4 className="text-xs font-medium text-gray-500 mb-2">
                                             {AREA_CODE_MAP.get(tempSelectedProvince)} 시군구
                                         </h4>
-                                        <div className="grid grid-cols-2 gap-1 p-1">
+                                        <div className="grid grid-cols-2 gap-1">
                                             <button
                                                 onClick={() => handleLocationSelect(tempSelectedProvince)} // 시도 전체 선택
                                                 className={`text-left px-2 py-1 text-sm rounded transition-colors ${

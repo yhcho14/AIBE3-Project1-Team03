@@ -1,10 +1,12 @@
-import { PublicApiData } from './types/common-api-response'
-import { PlaceInfo } from './types/placeDetail'
+import { PublicApiData } from '../types/common-api-response'
+import { PlaceDetailData } from '../types/placeDetailType'
+
+const API_BASE_PATH = '/api/public-data-proxy'
 
 export default async function getPlacesList<T>(params: string): Promise<PublicApiData<T> | null> {
     try {
         const baseUrl = process.env.NEXT_PUBLIC_VERCEL_URL || process.env.VERCEL_URL || 'http://localhost:3000'
-        const url = `${baseUrl}/api/fetch-public-data?${params}`
+        const url = `${baseUrl}${API_BASE_PATH}?${params}`
 
         const response = await fetch(url, { cache: 'no-store' })
 
@@ -20,10 +22,10 @@ export default async function getPlacesList<T>(params: string): Promise<PublicAp
     }
 }
 
-export async function getPlaceDetail(contentId: string): Promise<PlaceInfo | null> {
+export async function getPlaceDetail(contentId: string): Promise<PlaceDetailData | null> {
     try {
         const baseUrl = process.env.NEXT_PUBLIC_VERCEL_URL || process.env.VERCEL_URL || 'http://localhost:3000'
-        const url = `${baseUrl}/api/fetch-public-data/${contentId}`
+        const url = `${baseUrl}${API_BASE_PATH}/${contentId}`
 
         const response = await fetch(url, { cache: 'no-store' })
 

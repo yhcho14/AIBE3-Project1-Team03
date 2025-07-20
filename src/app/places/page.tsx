@@ -5,10 +5,6 @@ import Footer from '../../components/Footer'
 import PlaceList from './PlaceList'
 
 export default function PlacesPage() {
-    const handleAddToTrip = (placeId: string) => {
-        console.log('Add to trip:', placeId)
-    }
-
     return (
         <div className="min-h-screen bg-gray-50">
             <Header />
@@ -20,7 +16,7 @@ export default function PlacesPage() {
                         <p className="text-gray-600">다음 여행을 위한 특별한 장소를 찾아보세요</p>
                     </div>
 
-                    <PlaceList onAddToTrip={handleAddToTrip} />
+                    <PlaceList />
                 </div>
             </div>
 
