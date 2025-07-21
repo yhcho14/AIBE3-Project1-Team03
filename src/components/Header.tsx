@@ -84,7 +84,7 @@ export default function Header() {
                             <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
                                 <i className="ri-map-pin-2-fill text-white text-lg"></i>
                             </div>
-                            <span className="text-xl font-bold text-gray-800 font-pacifico">TripAI</span>
+                            <span className="text-xl font-bold text-gray-800 font-pacifico">TripleAI</span>
                         </Link>
 
                         <nav className="hidden md:flex items-center space-x-8">
