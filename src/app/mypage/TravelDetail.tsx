@@ -733,9 +733,8 @@ const TravelDetail = ({ selectedTravelId }: TravelDetailProps) => {
                                             )}
                                         </>
                                     )}
-                                    <div>임시 테스트 데이터</div>
                                     {selectedTravelInfo?.daily_travel_plan && (
-                                        <div className="mt-4 border-t pt-4">
+                                        <div className="mt-4 border-t pt-4 max-h-96 overflow-y-auto">
                                             <h4 className="text-lg font-semibold mb-2">일차별 여행 일정</h4>
                                             {selectedTravelInfo.daily_travel_plan.map((dayPlan: any) => (
                                                 <div key={dayPlan.day} className="mb-4">
@@ -787,7 +786,7 @@ const TravelDetail = ({ selectedTravelId }: TravelDetailProps) => {
                                     <button
                                         type="button"
                                         onClick={closeModal}
-                                        className="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400"
+                                        className="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400 whitespace-nowrap"
                                     >
                                         닫기
                                     </button>
