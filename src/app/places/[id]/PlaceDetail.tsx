@@ -9,6 +9,7 @@ import { PLACE_CONTENT_TYPE_MAP } from '../PlaceList'
 import AddToTravelButton from '../components/AddToTravelButton'
 import PlaceIntro from './components/PlaceIntro'
 import CourseInfo from './components/CourseInfo'
+import PlaceDetailSkeleton from './components/PlaceDetailSkeleton'
 
 function parseId(param: string | string[] | undefined): string | null {
     if (typeof param === 'string') {
@@ -22,50 +23,26 @@ interface PlaceDetailProps {
 }
 
 export default function PlaceDetail({ onBack }: PlaceDetailProps) {
-    const [placeDetail, setPlaceDetail] = useState<PlaceDetailData>()
+    const [placeDetail, setPlaceDetail] = useState<PlaceDetailData | null | undefined>()
 
     const placeId = parseId(useParams().id)
 
     useEffect(() => {
         if (placeId === null) {
-            console.error('Invalid ID parameter')
+            setPlaceDetail(null)
             return
         }
-        getPlaceDetail(placeId).then((data) => {
-            // console.log(data)
-            setPlaceDetail(data || undefined)
-        })
+        getPlaceDetail(placeId)
+            .then((data) => {
+                setPlaceDetail(data || null)
+            })
+            .catch(() => {
+                setPlaceDetail(null)
+            })
     }, [placeId])
 
     const handleAddToTravel = (placeId: string) => {
         console.log('Add to travel:', placeId)
-    }
-
-    const renderContentTypeDetailInfo = () => {
-        if (!placeDetail) {
-            return null
-        }
-
-        // switch (placeDetail.contenttypeid) {
-        //     case '12': // 관광지
-        //         return <AttractionDetail data={placeDetail.additionalDisplayInfo} />
-        //     case '14': // 문화시설
-        //         return <CultureDetail data={placeDetail.additionalDisplayInfo} />
-        //     case '15': // 행사
-        //         return <EventDetail data={placeDetail.additionalDisplayInfo} />
-        //     case '25': // 여행코스
-        //         return <CourseDetail data={placeDetail.additionalDisplayInfo} />
-        //     case '28': // 레포츠
-        //         return <RecreationDetail data={placeDetail.additionalDisplayInfo} />
-        //     case '32': // 숙박
-        //         return <AccommodationDetail data={placeDetail.additionalDisplayInfo} />
-        //     case '38': // 쇼핑
-        //         return <ShoppingDetail data={placeDetail.additionalDisplayInfo} />
-        //     case '39': // 음식점
-        //         return <RestaurantDetail data={placeDetail.additionalDisplayInfo} />
-        //     default:
-        //         return null
-        // }
     }
 
     return (
@@ -79,6 +56,12 @@ export default function PlaceDetail({ onBack }: PlaceDetailProps) {
                 <span className="font-medium">목록으로 돌아가기</span>
             </button>
 
+            {placeDetail === undefined && <PlaceDetailSkeleton />}
+            {placeDetail === null && (
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-16 text-center text-gray-500 text-lg font-semibold">
+                    존재하지 않거나 조회할 수 없는 장소입니다.
+                </div>
+            )}
             {placeDetail && (
                 <>
                     {/* Content Section */}
@@ -86,13 +69,13 @@ export default function PlaceDetail({ onBack }: PlaceDetailProps) {
                         <div>
                             {/* Header */}
                             <div className="flex items-center justify-between gap-4 mb-4 flex-nowrap">
-                                <h1 className="text-4xl font-bold text-gray-900 leading-tight flex-1 min-w-0 truncate">
+                                <h1 className="text-4xl font-bold text-gray-900 leading-tight flex-1">
                                     {placeDetail.title}
                                 </h1>
                                 <AddToTravelButton
                                     placeId={placeDetail.contentid}
-                                    onAddToTravel={handleAddToTravel}
-                                    className="border-2 border-blue-500"
+                                    placeName={placeDetail.title}
+                                    className="border-2 border-blue-500 flex-shrink-0"
                                 />
                             </div>
                             {/* Category Tags */}
@@ -113,7 +96,7 @@ export default function PlaceDetail({ onBack }: PlaceDetailProps) {
                             )}
                             {/* Summary Row */}
                             {(placeDetail.addr1 || placeDetail.tel || placeDetail.homepage) && (
-                                <div className="flex flex-wrap gap-6 items-center text-gray-700 text-base mb-2">
+                                <div className="flex flex-wrap gap-6 items-center text-gray-700 text-base mt-4 mb-2">
                                     {placeDetail.addr1 && (
                                         <div className="flex items-center gap-1">
                                             <i className="ri-map-pin-line text-blue-500"></i>
