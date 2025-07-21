@@ -79,7 +79,6 @@ export default function Header() {
             <header className="bg-white shadow-sm border-b border-gray-100">
                 <div className="px-6 py-4">
                     <div className="flex items-center justify-between">
-                        {/* Logo */}
                         <Link href="/" className="flex items-center space-x-2">
                             <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
                                 <i className="ri-map-pin-2-fill text-white text-lg"></i>
@@ -87,7 +86,6 @@ export default function Header() {
                             <span className="text-xl font-bold text-gray-800 font-pacifico">TripAI</span>
                         </Link>
 
-                        {/* Navigation */}
                         <nav className="hidden md:flex items-center space-x-8">
                             <Link href="/" className="text-gray-600 hover:text-blue-600 transition-colors">
                                 홈
@@ -103,7 +101,6 @@ export default function Header() {
                             </Link>
                         </nav>
 
-                        {/* Auth Buttons */}
                         <div className="flex items-center space-x-4">
                             {!isLoggedIn ? (
                                 <>

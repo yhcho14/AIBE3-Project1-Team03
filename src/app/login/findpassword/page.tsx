@@ -16,7 +16,6 @@ export default function FindPasswordPage() {
         setError(null)
 
         try {
-            // 이메일 형식 검증
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
             if (!emailRegex.test(email)) {
                 setError('올바른 이메일 형식을 입력해주세요.')
@@ -24,7 +23,6 @@ export default function FindPasswordPage() {
                 return
             }
 
-            // 비밀번호 재설정 이메일 발송
             const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
                 redirectTo: `${window.location.origin}/login/reset-password`,
             })
@@ -51,7 +49,6 @@ export default function FindPasswordPage() {
         <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4">
             <div className="max-w-md w-full">
                 <div className="bg-white rounded-2xl shadow-xl p-8">
-                    {/* Header */}
                     <div className="text-center mb-8">
                         <Link href="/" className="inline-flex items-center space-x-2 mb-6">
                             <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
