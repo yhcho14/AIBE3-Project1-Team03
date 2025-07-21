@@ -1,0 +1,38 @@
+name: Sync Fork develop with Upstream (Merge)
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # 매일 자정 UTC 실행 (한국 시간 오전 9시)
+  workflow_dispatch:     # 수동 실행 가능
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Git
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+      - name: Add upstream remote
+        run: git remote add upstream https://github.com/prgrms-aibe-devcourse/AIBE3-Project1-Team03.git
+
+      - name: Fetch upstream develop
+        run: git fetch upstream develop
+
+      - name: Merge upstream/develop into local develop
+        run: |
+          git checkout develop
+          git merge upstream/develop --no-edit
+
+      - name: Push changes to forked repo
+        uses: ad-m/github-push-action@v0.6.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: develop
