@@ -76,8 +76,8 @@ AI: 죄송합니다. 저는 여행 및 지역 정보에 대한 질문에만 답�
 `
 
 export function useAISearchChat(
-    containerRef: React.RefObject<HTMLDivElement>,
-    chatMessagesRef: React.RefObject<HTMLDivElement>,
+    containerRef: React.RefObject<HTMLDivElement | null>,
+    chatMessagesRef: React.RefObject<HTMLDivElement | null>,
 ) {
     const [query, setQuery] = useState('')
     const [isChatOpen, setIsChatOpen] = useState(false)
