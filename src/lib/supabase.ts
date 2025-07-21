@@ -3,7 +3,25 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
+// 클라이언트사이드용 supabase 클라이언트 (RLS 적용)
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+
+// 서버사이드용 supabase 클라이언트 (RLS 우회)
+export const createServiceRoleClient = () => {
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+    if (!supabaseServiceKey) {
+        console.warn('SUPABASE_SERVICE_ROLE_KEY is not configured')
+        return supabase // fallback to regular client
+    }
+
+    return createClient(supabaseUrl, supabaseServiceKey, {
+        auth: {
+            autoRefreshToken: false,
+            persistSession: false,
+        },
+    })
+}
 
 // 사용자 이름을 가져오는 유틸리티 함수 (우선순위: 프로필 닉네임 > user_metadata.name > 이메일 앞부분 > 익명)
 export const getUserName = async (userId: string) => {
