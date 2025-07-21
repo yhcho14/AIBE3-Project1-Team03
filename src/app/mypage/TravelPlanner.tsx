@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import EditPlanModal from './EditPlanModal'
 import TravelPlanCard from './TravelPlanCard'
+import { useRouter } from 'next/navigation'
 
 interface TravelPlan {
     id: number
@@ -32,6 +33,7 @@ interface TravelPlannerProps {
 }
 
 export default function TravelPlanner({ onDetailView }: TravelPlannerProps) {
+    const router = useRouter();
     const [loading, setLoading] = useState(true)
     const [plans, setPlans] = useState<TravelPlan[]>([])
     //const [selectedPlan, setSelectedPlan] = useState<TravelPlan | null>(null)
@@ -560,7 +562,7 @@ export default function TravelPlanner({ onDetailView }: TravelPlannerProps) {
                             메인페이지에서 받은 AI 추천을 바탕으로 자동으로 여행 계획을 생성해보세요
                         </p>
                     </div>
-                    <button className="bg-white text-purple-600 px-6 py-3 rounded-lg hover:bg-gray-100 transition-colors font-medium whitespace-nowrap">
+                    <button className="bg-white text-purple-600 px-6 py-3 rounded-lg hover:bg-gray-100 transition-colors font-medium whitespace-nowrap" onClick={() => router.push('/')}>
                         <i className="ri-magic-line mr-2"></i>
                         AI 추천 받기
                     </button>
