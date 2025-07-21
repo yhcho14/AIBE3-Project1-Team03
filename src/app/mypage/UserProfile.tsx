@@ -9,6 +9,9 @@ import { useRouter } from 'next/navigation'
 
 export default function UserProfile() {
     const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null)
+    const userProfile = useUserProfile()
+    const router = useRouter()
+
     useEffect(() => {
         const checkSession = async () => {
             const {
@@ -28,7 +31,7 @@ export default function UserProfile() {
                 <div className="text-xl font-bold text-gray-800 mb-2">로그인이 필요합니다</div>
                 <div className="text-gray-600 mb-4">마이페이지를 이용하려면 로그인이 필요합니다.</div>
                 <button
-                    onClick={() => (location.href = '/login')}
+                    onClick={() => router.push('/login')}
                     className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors"
                 >
                     로그인 하러가기
@@ -97,9 +100,7 @@ export default function UserProfile() {
         checkDeletePassword,
         confirmDeleteAccount,
         cancelDeleteAccount,
-    } = useUserProfile()
-
-    const router = useRouter()
+    } = userProfile
 
     const safeProfile: UserProfileType = profile ?? {
         name: '',

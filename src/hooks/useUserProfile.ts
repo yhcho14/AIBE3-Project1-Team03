@@ -30,12 +30,14 @@ export function useUserProfile() {
     const [newPasswordValid, setNewPasswordValid] = useState<boolean | null>(null)
     const [passwordsMatch, setPasswordsMatch] = useState<boolean | null>(null)
 
-    // 계정 삭제 관련 상태
     const [showDeleteAccount, setShowDeleteAccount] = useState(false)
     const [deletePassword, setDeletePassword] = useState('')
     const [deletePasswordValid, setDeletePasswordValid] = useState<boolean | null>(null)
     const [deleteError, setDeleteError] = useState<string | null>(null)
     const [isDeleting, setIsDeleting] = useState(false)
+
+    const [checked, setChecked] = useState(false)
+    const [isLoggedIn, setIsLoggedIn] = useState<boolean>(true)
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -44,8 +46,13 @@ export function useUserProfile() {
             } = await supabase.auth.getUser()
             if (!user) {
                 setProfile(null)
+                setEditForm(null)
+                setIsLoggedIn(false)
+                setChecked(true)
                 return
             }
+            setIsLoggedIn(true)
+            setChecked(true)
             const { data } = await supabase.from('user_profile').select('*').eq('user_id', user.id).single()
             if (data) {
                 setProfile({
@@ -210,7 +217,6 @@ export function useUserProfile() {
                 return
             }
 
-            // user_profile 테이블에서 계정 정보 삭제 (소프트 삭제)
             const { error: profileError } = await supabase
                 .from('user_profile')
                 .update({
@@ -229,8 +235,6 @@ export function useUserProfile() {
                 return
             }
 
-            // 계정 삭제 대신 로그아웃 후 홈페이지로 이동
-            // 실제 계정 삭제는 관리자가 나중에 처리할 수 있도록 is_deleted 플래그만 설정
             await supabase.auth.signOut()
             window.location.href = '/'
         } catch (error) {
@@ -318,6 +322,63 @@ export function useUserProfile() {
             /[0-9]/.test(pw) &&
             /[!@#$%^&*(),.?":{}|<>_\-\\[\]=+~`';/]/.test(pw)
         setNewPasswordValid(valid)
+    }
+
+    if (checked && !isLoggedIn) {
+        return {
+            isEditing: false,
+            setIsEditing: () => {},
+            profile: null,
+            editForm: null,
+            setEditForm: () => {},
+            handleSave: () => {},
+            handleCancel: () => {},
+            isNicknameFocused: false,
+            setIsNicknameFocused: () => {},
+            newInterest: '',
+            setNewInterest: () => {},
+            handleImageUpload: () => {},
+            handleAddCustomInterest: () => {},
+            handleRemoveInterest: () => {},
+            nicknameError: null,
+            setNicknameError: () => {},
+            checkNicknameDuplicate: async () => false,
+            handleDeleteAccount: () => {},
+            showPasswordChange: false,
+            setShowPasswordChange: () => {},
+            currentPassword: '',
+            setCurrentPassword: () => {},
+            newPassword: '',
+            setNewPassword: () => {},
+            confirmPassword: '',
+            setConfirmPassword: () => {},
+            passwordError: null,
+            setPasswordError: () => {},
+            passwordSuccess: null,
+            setPasswordSuccess: () => {},
+            currentPasswordValid: null,
+            setCurrentPasswordValid: () => {},
+            newPasswordValid: null,
+            setNewPasswordValid: () => {},
+            passwordsMatch: null,
+            setPasswordsMatch: () => {},
+            handlePasswordChange: () => {},
+            checkCurrentPassword: () => {},
+            validateNewPassword: () => {},
+            showDeleteAccount: false,
+            setShowDeleteAccount: () => {},
+            deletePassword: '',
+            setDeletePassword: () => {},
+            deletePasswordValid: null,
+            setDeletePasswordValid: () => {},
+            deleteError: null,
+            setDeleteError: () => {},
+            isDeleting: false,
+            setIsDeleting: () => {},
+            checkDeletePassword: () => {},
+            confirmDeleteAccount: () => {},
+            cancelDeleteAccount: () => {},
+        }
     }
 
     return {
