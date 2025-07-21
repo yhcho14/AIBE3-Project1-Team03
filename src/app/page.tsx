@@ -11,7 +11,6 @@ export default function Home() {
         <div className="min-h-screen bg-white">
             <Header />
 
-            {/* Hero Section */}
             <section
                 className="relative min-h-screen flex items-center justify-center pt-20"
                 style={{
@@ -24,9 +23,9 @@ export default function Home() {
                 <div className="container mx-auto px-6 text-center w-full">
                     <div className="max-w-4xl mx-auto mb-8">
                         <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
-                            AI와 함께 떠나는
+                            AI와 함께
                             <br />
-                            <span className="text-blue-400">완벽한 여행</span>
+                            <span className="text-blue-400">여행의 즐거움을 세배로</span>
                         </h1>
                         <p className="text-xl text-gray-200 mb-12 max-w-2xl mx-auto">
                             개인 맞춤형 AI 추천으로 특별한 여행을 계획하고, 다른 여행자들과 소중한 경험을 나누어보세요
@@ -36,11 +35,8 @@ export default function Home() {
                     <AISearchBar />
                 </div>
             </section>
-            {/* <recommendedDestinations /> */}
-            {/* Popular Destinations */}
             <PopularDestinations />
 
-            {/* Popular Posts */}
             <PopularPosts />
 
             <Footer />

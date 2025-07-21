@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
+import handleGoogleLogin from '../../hooks/useGoogleAuth'
 
 export default function SignupPage() {
     const [formData, setFormData] = useState({
@@ -94,6 +95,38 @@ export default function SignupPage() {
     const [signupSuccess, setSignupSuccess] = useState(false)
     const [signupError, setSignupError] = useState<string | null>(null)
 
+    // 구글 로그인 후 user_profile row 자동 추가
+    useEffect(() => {
+        const insertProfileIfNeeded = async () => {
+            const {
+                data: { user },
+            } = await supabase.auth.getUser()
+            if (user) {
+                // user_profile에 row가 있는지 확인
+                const { data: profile } = await supabase
+                    .from('user_profile')
+                    .select('user_id')
+                    .eq('user_id', user.id)
+                    .single()
+                if (!profile) {
+                    // 없으면 row 추가 (닉네임 등 임시값)
+                    await supabase.from('user_profile').insert([
+                        {
+                            user_id: user.id,
+                            nickname: user.user_metadata?.name || '',
+                            introduce: '',
+                            interests: '',
+                            birth_date: null,
+                            gender: 'private',
+                            profile_img: user.user_metadata?.avatar_url || '',
+                        },
+                    ])
+                }
+            }
+        }
+        insertProfileIfNeeded()
+    }, [])
+
     return (
         <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4">
             <div className="max-w-md w-full">
@@ -109,150 +142,189 @@ export default function SignupPage() {
                         <p className="text-gray-600">새로운 여행의 시작</p>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">이름</label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center">
-                                    <i className="ri-user-line text-gray-400"></i>
+                    {!signupSuccess ? (
+                        <>
+                            <form onSubmit={handleSubmit} className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">이름</label>
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center">
+                                            <i className="ri-user-line text-gray-400"></i>
+                                        </div>
+                                        <input
+                                            type="text"
+                                            name="name"
+                                            value={formData.name}
+                                            onChange={(e) => {
+                                                handleChange(e)
+                                                validateName(e.target.value)
+                                            }}
+                                            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            placeholder="이름을 입력하세요"
+                                            required
+                                        />
+                                    </div>
+                                    {nameValid === true && (
+                                        <div className="text-green-600 text-sm">사용 가능한 이름입니다.</div>
+                                    )}
+                                    {nameValid === false && (
+                                        <div className="text-red-500 text-sm">
+                                            한글 4글자 이내 또는 영어 12글자 이내, 숫자/특수기호 불가
+                                        </div>
+                                    )}
                                 </div>
-                                <input
-                                    type="text"
-                                    name="name"
-                                    value={formData.name}
-                                    onChange={(e) => {
-                                        handleChange(e)
-                                        validateName(e.target.value)
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">이메일</label>
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center">
+                                            <i className="ri-mail-line text-gray-400"></i>
+                                        </div>
+                                        <input
+                                            type="email"
+                                            name="email"
+                                            value={formData.email}
+                                            onChange={handleChange}
+                                            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            placeholder="이메일을 입력하세요"
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">비밀번호</label>
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center">
+                                            <i className="ri-lock-line text-gray-400"></i>
+                                        </div>
+                                        <input
+                                            type="password"
+                                            name="password"
+                                            value={formData.password}
+                                            onChange={(e) => {
+                                                handleChange(e)
+                                                validatePassword(e.target.value)
+                                                setPasswordsMatch(formData.confirmPassword === e.target.value)
+                                            }}
+                                            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            placeholder="비밀번호를 입력하세요"
+                                            required
+                                        />
+                                    </div>
+                                    {passwordValid === true && (
+                                        <div className="text-green-600 text-sm">유효한 비밀번호입니다.</div>
+                                    )}
+                                    {passwordValid === false && (
+                                        <div className="text-red-500 text-sm">
+                                            8자 이상, 영문+숫자, 특수기호를 모두 포함해야 합니다.
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        비밀번호 확인
+                                    </label>
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center">
+                                            <i className="ri-lock-line text-gray-400"></i>
+                                        </div>
+                                        <input
+                                            type="password"
+                                            name="confirmPassword"
+                                            value={formData.confirmPassword}
+                                            onChange={(e) => {
+                                                handleChange(e)
+                                                setPasswordsMatch(e.target.value === formData.password)
+                                            }}
+                                            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            placeholder="비밀번호를 다시 입력하세요"
+                                            required
+                                        />
+                                    </div>
+                                    {passwordsMatch === true && (
+                                        <div className="text-green-600 text-sm">비밀번호가 일치합니다.</div>
+                                    )}
+                                    {passwordsMatch === false && (
+                                        <div className="text-red-500 text-sm">비밀번호가 일치하지 않습니다.</div>
+                                    )}
+                                </div>
+                                <button
+                                    type="submit"
+                                    disabled={
+                                        isLoading || passwordValid !== true || !passwordsMatch || nameValid !== true
+                                    }
+                                    className="w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 flex items-center justify-center space-x-2 whitespace-nowrap"
+                                >
+                                    {isLoading ? (
+                                        <>
+                                            <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full"></div>
+                                            <span>가입 중...</span>
+                                        </>
+                                    ) : (
+                                        <span>회원가입</span>
+                                    )}
+                                </button>
+                            </form>
+
+                            {/* 구글 회원가입/로그인 버튼 */}
+                            <div className="mt-6">
+                                <button
+                                    type="button"
+                                    onClick={handleGoogleLogin}
+                                    className="w-full bg-red-500 text-white py-3 rounded-lg hover:bg-red-600 transition-colors flex items-center justify-center space-x-2"
+                                >
+                                    <i className="ri-google-fill text-lg"></i>
+                                    <span>구글로 회원가입 / 로그인</span>
+                                </button>
+                            </div>
+
+                            {signupError && <div className="text-red-500 text-sm text-center mt-2">{signupError}</div>}
+
+                            <div className="mt-6 text-center">
+                                <span className="text-gray-600">이미 계정이 있으신가요? </span>
+                                <Link href="/login" className="text-blue-600 hover:text-blue-500 font-medium">
+                                    로그인
+                                </Link>
+                            </div>
+                        </>
+                    ) : (
+                        <div className="text-center">
+                            <div className="mb-6">
+                                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <i className="ri-mail-check-line text-green-600 text-2xl"></i>
+                                </div>
+                                <h2 className="text-xl font-bold text-gray-800 mb-2">회원가입 완료!</h2>
+                                <p className="text-gray-600 mb-4">{formData.email}로 인증 이메일을 발송했습니다.</p>
+                                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                                    <p className="text-blue-800 text-sm leading-relaxed">
+                                        이메일 인증을 완료한 후 로그인할 수 있습니다.
+                                        <br />
+                                        스팸 메일함도 확인해보세요.
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="space-y-3">
+                                <button
+                                    onClick={() => router.push('/login')}
+                                    className="w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 transition-colors"
+                                >
+                                    로그인 페이지로 이동
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setSignupSuccess(false)
+                                        setFormData({ name: '', email: '', password: '', confirmPassword: '' })
+                                        setSignupError(null)
                                     }}
-                                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    placeholder="이름을 입력하세요"
-                                    required
-                                />
+                                    className="w-full bg-gray-100 text-gray-700 py-3 rounded-lg hover:bg-gray-200 transition-colors"
+                                >
+                                    다시 회원가입
+                                </button>
                             </div>
-                            {nameValid === true && (
-                                <div className="text-green-600 text-sm">사용 가능한 이름입니다.</div>
-                            )}
-                            {nameValid === false && (
-                                <div className="text-red-500 text-sm">
-                                    한글 4글자 이내 또는 영어 12글자 이내, 숫자/특수기호 불가
-                                </div>
-                            )}
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">이메일</label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center">
-                                    <i className="ri-mail-line text-gray-400"></i>
-                                </div>
-                                <input
-                                    type="email"
-                                    name="email"
-                                    value={formData.email}
-                                    onChange={handleChange}
-                                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    placeholder="이메일을 입력하세요"
-                                    required
-                                />
-                            </div>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">비밀번호</label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center">
-                                    <i className="ri-lock-line text-gray-400"></i>
-                                </div>
-                                <input
-                                    type="password"
-                                    name="password"
-                                    value={formData.password}
-                                    onChange={(e) => {
-                                        handleChange(e)
-                                        validatePassword(e.target.value)
-                                        setPasswordsMatch(formData.confirmPassword === e.target.value)
-                                    }}
-                                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    placeholder="비밀번호를 입력하세요"
-                                    required
-                                />
-                            </div>
-                            {passwordValid === true && (
-                                <div className="text-green-600 text-sm">유효한 비밀번호입니다.</div>
-                            )}
-                            {passwordValid === false && (
-                                <div className="text-red-500 text-sm">
-                                    8자 이상, 영문+숫자, 특수기호를 모두 포함해야 합니다.
-                                </div>
-                            )}
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">비밀번호 확인</label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center">
-                                    <i className="ri-lock-line text-gray-400"></i>
-                                </div>
-                                <input
-                                    type="password"
-                                    name="confirmPassword"
-                                    value={formData.confirmPassword}
-                                    onChange={(e) => {
-                                        handleChange(e)
-                                        setPasswordsMatch(e.target.value === formData.password)
-                                    }}
-                                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                    placeholder="비밀번호를 다시 입력하세요"
-                                    required
-                                />
-                            </div>
-                            {passwordsMatch === true && (
-                                <div className="text-green-600 text-sm">비밀번호가 일치합니다.</div>
-                            )}
-                            {passwordsMatch === false && (
-                                <div className="text-red-500 text-sm">비밀번호가 일치하지 않습니다.</div>
-                            )}
-                        </div>
-                        <button
-                            type="submit"
-                            disabled={isLoading || passwordValid !== true || !passwordsMatch || nameValid !== true}
-                            className="w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 flex items-center justify-center space-x-2 whitespace-nowrap"
-                        >
-                            {isLoading ? (
-                                <>
-                                    <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full"></div>
-                                    <span>가입 중...</span>
-                                </>
-                            ) : (
-                                <span>회원가입</span>
-                            )}
-                        </button>
-                    </form>
-
-                    {signupSuccess && (
-                        <div className="mt-6 text-center">
-                            <div className="text-green-600 font-semibold mb-4">
-                                회원가입에 성공했습니다.
-                                <br />
-                                이메일 인증을 완료해야 로그인할 수 있습니다.
-                            </div>
-                            <button
-                                onClick={() => router.push('/login')}
-                                className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors"
-                            >
-                                확인
-                            </button>
                         </div>
                     )}
-
-                    {signupError && <div className="text-red-500 text-sm text-center mt-2">{signupError}</div>}
-
-                    <div className="mt-6 text-center">
-                        <span className="text-gray-600">이미 계정이 있으신가요? </span>
-                        <Link href="/login" className="text-blue-600 hover:text-blue-500 font-medium">
-                            로그인
-                        </Link>
-                    </div>
                 </div>
             </div>
         </div>
