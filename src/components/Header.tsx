@@ -50,6 +50,7 @@ export default function Header() {
             setProfileImg(data?.profile_img ?? '')
         }
         fetchProfileImg()
+        router.refresh()
     }, [user])
 
     const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
@@ -96,9 +97,11 @@ export default function Header() {
                             <Link href="/board" className="text-gray-600 hover:text-blue-600 transition-colors">
                                 여행 후기
                             </Link>
-                            <Link href="/mypage" className="text-gray-600 hover:text-blue-600 transition-colors">
-                                마이페이지
-                            </Link>
+                            {isLoggedIn && (
+                                <Link href="/mypage" className="text-gray-600 hover:text-blue-600 transition-colors">
+                                    마이페이지
+                                </Link>
+                            )}
                         </nav>
 
                         <div className="flex items-center space-x-4">

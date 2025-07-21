@@ -38,7 +38,12 @@ const categoryOptions = [
 const API_TYPE_AREA_BASED_LIST = 'areaBasedList2'
 const API_TYPE_SEARCH_KEYWORD_LIST = 'searchKeyword2'
 
-export default function PlaceList() {
+interface PlaceListProps {
+    initialAreaCode?: string | null
+    initialSigungu?: string | null
+}
+
+export default function PlaceList({ initialAreaCode, initialSigungu }: PlaceListProps) {
     const [places, setPlaces] = useState<Place[]>([])
     const [sortBy, setSortBy] = useState(sortOptions[0].value)
     const [selectedAreaCode, setSelectedAreaCode] = useState<string | null>(null)
@@ -54,6 +59,17 @@ export default function PlaceList() {
     const pageGroupSize = 5
     const topRef = useRef<HTMLDivElement>(null)
     const router = useRouter()
+
+    useEffect(() => {
+        if (initialAreaCode) {
+            setSelectedAreaCode(initialAreaCode)
+        }
+    }, [initialAreaCode])
+    useEffect(() => {
+        if (initialSigungu) {
+            setSelectedSigunguCode(initialSigungu)
+        }
+    }, [initialSigungu])
 
     useEffect(() => {
         const queryParams = [

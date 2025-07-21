@@ -30,6 +30,7 @@ export default function AISearchExpandableInput() {
         replyIDK,
         replyFinalDecision,
         generateTravelPlanSummary,
+        sendDirectMessage, // sendDirectMessage 추가
     } = useAISearchChat(containerRef, chatMessagesRef)
 
     return (
@@ -55,11 +56,12 @@ export default function AISearchExpandableInput() {
                         onFocus={openChat}
                         readOnly // 클릭해서 열리는 용도로만 사용
                     />
+                    <span className="text-xs text-gray-500 whitespace-nowrap mt-3 mr-">AI에게</span>
                     <button
                         onClick={getRecommendation}
                         className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 text-sm whitespace-nowrap"
                     >
-                        추천받기
+                        질문받기
                     </button>
                 </div>
 
@@ -110,20 +112,12 @@ export default function AISearchExpandableInput() {
                         <div className="mt-4 flex justify-between items-center">
                             <div className="flex gap-2">
                                 {['좋아', '별로야', '모르겠어'].map((label, idx) => {
-                                    let onClickHandler
-                                    if (label === '좋아') {
-                                        onClickHandler = replyGood
-                                    } else if (label === '별로야') {
-                                        onClickHandler = replyBad
-                                    } else {
-                                        // label === '모르겠어'
-                                        onClickHandler = replyIDK
-                                    }
-
                                     return (
                                         <button
                                             key={idx}
-                                            onClick={generateTravelPlanSummary} // onClick 핸들러 연결
+                                            onClick={async () => {
+                                                await sendDirectMessage(label)
+                                            }}
                                             className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm"
                                         >
                                             {label}
