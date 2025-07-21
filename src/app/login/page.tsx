@@ -36,7 +36,6 @@ export default function LoginPage() {
         setIsLoading(false)
 
         if (data?.user) {
-            // user_profile row가 있는지 확인
             const { data: profile } = await supabase
                 .from('user_profile')
                 .select('user_id')
@@ -55,7 +54,6 @@ export default function LoginPage() {
                     },
                 ])
             }
-            // 기존 is_deleted 체크 등 이하 생략
             const { data: profileCheck } = await supabase
                 .from('user_profile')
                 .select('is_deleted')
@@ -76,7 +74,6 @@ export default function LoginPage() {
         <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4">
             <div className="max-w-md w-full">
                 <div className="bg-white rounded-2xl shadow-xl p-8">
-                    {/* Header */}
                     <div className="text-center mb-8">
                         <Link href="/" className="inline-flex items-center space-x-2 mb-6">
                             <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
@@ -87,8 +84,6 @@ export default function LoginPage() {
                         <h1 className="text-2xl font-bold text-gray-800 mb-2">로그인</h1>
                         <p className="text-gray-600">AI와 함께하는 여행을 시작해보세요</p>
                     </div>
-
-                    {/* Login Form */}
                     <form onSubmit={handleLogin} className="space-y-6">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">이메일</label>
@@ -106,7 +101,6 @@ export default function LoginPage() {
                                 />
                             </div>
                         </div>
-
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">비밀번호</label>
                             <div className="relative">
@@ -123,7 +117,6 @@ export default function LoginPage() {
                                 />
                             </div>
                         </div>
-
                         <div className="flex items-center justify-between">
                             <label className="flex items-center"></label>
                             <Link href="#" className="text-sm text-blue-600 hover:text-blue-500">
