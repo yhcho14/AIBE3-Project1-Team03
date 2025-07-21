@@ -10,6 +10,19 @@ const API_TYPE_DETAIL_INTRO = 'detailIntro2'
 const API_TYPE_DETAIL_INFO = 'detailInfo2'
 const API_TYPE_DETAIL_LCLS_SYSTM_CODE = 'lclsSystmCode2'
 
+// CORS 헤더 설정 함수
+function setCorsHeaders(response: NextResponse) {
+    response.headers.set('Access-Control-Allow-Origin', '*')
+    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+    response.headers.set('Access-Control-Allow-Headers', 'Content-Type')
+    return response
+}
+
+// OPTIONS 메서드 처리
+export async function OPTIONS() {
+    return setCorsHeaders(new NextResponse(null, { status: 200 }))
+}
+
 // const formatValue = (value: string | undefined): string | null => {
 //     return value && value.trim() !== '' ? value : null
 // }
@@ -18,12 +31,12 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
     try {
         const SERVICE_KEY = process.env.PUBLIC_DATA_SERVICE_KEY
         if (!SERVICE_KEY) {
-            return NextResponse.json({ message: 'API Service Key is not configured.' }, { status: 500 })
+            return setCorsHeaders(NextResponse.json({ message: 'API Service Key is not configured.' }, { status: 500 }))
         }
 
         const { id: contentId } = await params
         if (!contentId) {
-            return NextResponse.json({ message: 'contentId is required.' }, { status: 400 })
+            return setCorsHeaders(NextResponse.json({ message: 'contentId is required.' }, { status: 400 }))
         }
 
         const baseParams = {
@@ -38,7 +51,9 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
         })
         const commonData = commonResponse.data.response?.body?.items?.item?.[0]
         if (!commonData) {
-            return NextResponse.json({ message: 'Common data not found for this contentId.' }, { status: 404 })
+            return setCorsHeaders(
+                NextResponse.json({ message: 'Common data not found for this contentId.' }, { status: 404 }),
+            )
         }
 
         const contentTypeId = commonData.contenttypeid
@@ -283,15 +298,17 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
 
         // finalData.additionalDisplayInfo = additionalDisplayInfo
 
-        return NextResponse.json(finalData)
+        return setCorsHeaders(NextResponse.json(finalData))
     } catch (error: any) {
         console.error('Error fetching or parsing public data:', error)
         if (axios.isAxiosError(error)) {
             console.error('Axios Error Details:', error.response?.data || error.message)
         }
-        return NextResponse.json(
-            { message: 'Failed to fetch or parse public data', error: error.message },
-            { status: 500 },
+        return setCorsHeaders(
+            NextResponse.json(
+                { message: 'Failed to fetch or parse public data', error: error.message },
+                { status: 500 },
+            ),
         )
     }
 }
