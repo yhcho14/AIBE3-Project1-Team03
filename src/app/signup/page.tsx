@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
+import handleGoogleLogin from '../../hooks/useGoogleAuth'
 
 export default function SignupPage() {
     const [formData, setFormData] = useState({
@@ -93,6 +94,38 @@ export default function SignupPage() {
 
     const [signupSuccess, setSignupSuccess] = useState(false)
     const [signupError, setSignupError] = useState<string | null>(null)
+
+    // 구글 로그인 후 user_profile row 자동 추가
+    useEffect(() => {
+        const insertProfileIfNeeded = async () => {
+            const {
+                data: { user },
+            } = await supabase.auth.getUser()
+            if (user) {
+                // user_profile에 row가 있는지 확인
+                const { data: profile } = await supabase
+                    .from('user_profile')
+                    .select('user_id')
+                    .eq('user_id', user.id)
+                    .single()
+                if (!profile) {
+                    // 없으면 row 추가 (닉네임 등 임시값)
+                    await supabase.from('user_profile').insert([
+                        {
+                            user_id: user.id,
+                            nickname: user.user_metadata?.name || '',
+                            introduce: '',
+                            interests: '',
+                            birth_date: null,
+                            gender: 'private',
+                            profile_img: user.user_metadata?.avatar_url || '',
+                        },
+                    ])
+                }
+            }
+        }
+        insertProfileIfNeeded()
+    }, [])
 
     return (
         <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4">
@@ -234,6 +267,18 @@ export default function SignupPage() {
                                     )}
                                 </button>
                             </form>
+
+                            {/* 구글 회원가입/로그인 버튼 */}
+                            <div className="mt-6">
+                                <button
+                                    type="button"
+                                    onClick={handleGoogleLogin}
+                                    className="w-full bg-red-500 text-white py-3 rounded-lg hover:bg-red-600 transition-colors flex items-center justify-center space-x-2"
+                                >
+                                    <i className="ri-google-fill text-lg"></i>
+                                    <span>구글로 회원가입 / 로그인</span>
+                                </button>
+                            </div>
 
                             {signupError && <div className="text-red-500 text-sm text-center mt-2">{signupError}</div>}
 

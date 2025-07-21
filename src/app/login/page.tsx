@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '../../lib/supabase'
+import handleGoogleLogin from '../../hooks/useGoogleAuth'
 
 export default function LoginPage() {
     const [email, setEmail] = useState('')
@@ -102,72 +103,89 @@ export default function LoginPage() {
                             <div className="animate-spin w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto"></div>
                         </div>
                     ) : (
-                        <form onSubmit={handleLogin} className="space-y-6">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">이메일</label>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center">
-                                        <i className="ri-mail-line text-gray-400"></i>
-                                    </div>
-                                    <input
-                                        type="email"
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        placeholder="이메일을 입력하세요"
-                                        required
-                                    />
-                                </div>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">비밀번호</label>
-                                <div className="relative">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center">
-                                        <i className="ri-lock-line text-gray-400"></i>
-                                    </div>
-                                    <input
-                                        type="password"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                        placeholder="비밀번호를 입력하세요"
-                                        required
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="flex items-center justify-between">
-                                <label className="flex items-center"></label>
-                                <Link href="/login/findpassword" className="text-sm text-blue-600 hover:text-blue-500">
-                                    비밀번호 찾기
-                                </Link>
-                            </div>
-
-                            {loginError && (
-                                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                                    <div className="flex items-center space-x-2">
-                                        <i className="ri-error-warning-line text-red-500"></i>
-                                        <span className="text-red-700 text-sm">{loginError}</span>
+                        <>
+                            <form onSubmit={handleLogin} className="space-y-6">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">이메일</label>
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center">
+                                            <i className="ri-mail-line text-gray-400"></i>
+                                        </div>
+                                        <input
+                                            type="email"
+                                            value={email}
+                                            onChange={(e) => setEmail(e.target.value)}
+                                            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            placeholder="이메일을 입력하세요"
+                                            required
+                                        />
                                     </div>
                                 </div>
-                            )}
 
-                            <button
-                                type="submit"
-                                disabled={isLoading}
-                                className="w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 flex items-center justify-center space-x-2 whitespace-nowrap"
-                            >
-                                {isLoading ? (
-                                    <>
-                                        <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full"></div>
-                                        <span>로그인 중...</span>
-                                    </>
-                                ) : (
-                                    <span>로그인</span>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">비밀번호</label>
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center">
+                                            <i className="ri-lock-line text-gray-400"></i>
+                                        </div>
+                                        <input
+                                            type="password"
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                            placeholder="비밀번호를 입력하세요"
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center justify-between">
+                                    <label className="flex items-center"></label>
+                                    <Link
+                                        href="/login/findpassword"
+                                        className="text-sm text-blue-600 hover:text-blue-500"
+                                    >
+                                        비밀번호 찾기
+                                    </Link>
+                                </div>
+
+                                {loginError && (
+                                    <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                                        <div className="flex items-center space-x-2">
+                                            <i className="ri-error-warning-line text-red-500"></i>
+                                            <span className="text-red-700 text-sm">{loginError}</span>
+                                        </div>
+                                    </div>
                                 )}
-                            </button>
-                        </form>
+
+                                <button
+                                    type="submit"
+                                    disabled={isLoading}
+                                    className="w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 flex items-center justify-center space-x-2 whitespace-nowrap"
+                                >
+                                    {isLoading ? (
+                                        <>
+                                            <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full"></div>
+                                            <span>로그인 중...</span>
+                                        </>
+                                    ) : (
+                                        <span>로그인</span>
+                                    )}
+                                </button>
+                            </form>
+
+                            {/* 구글 로그인 버튼 */}
+                            <div className="mt-6">
+                                <button
+                                    type="button"
+                                    onClick={handleGoogleLogin}
+                                    className="w-full bg-red-500 text-white py-3 rounded-lg hover:bg-red-600 transition-colors flex items-center justify-center space-x-2"
+                                >
+                                    <i className="ri-google-fill text-lg"></i>
+                                    <span>구글로 로그인 / 회원가입</span>
+                                </button>
+                            </div>
+                        </>
                     )}
 
                     <div className="mt-6 text-center">
