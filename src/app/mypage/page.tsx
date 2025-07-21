@@ -4,7 +4,6 @@ import Header from '../../components/Header'
 import Footer from '../../components/Footer'
 import TravelPlanner from './TravelPlanner'
 import UserProfile from './UserProfile'
-import MyTrips from './MyTrips'
 import TravelDetail from './TravelDetail'
 import { useState } from 'react'
 

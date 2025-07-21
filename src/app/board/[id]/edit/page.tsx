@@ -1,11 +1,12 @@
 import PostEditClient from "./PostEditClient";
 
 interface PageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
-export default function PostEditPage({ params }: PageProps) {
-  return <PostEditClient postId={params.id} />;
+export default async function PostEditPage({ params }: PageProps) {
+  const { id } = await params;
+  return <PostEditClient postId={id} />;
 } 
