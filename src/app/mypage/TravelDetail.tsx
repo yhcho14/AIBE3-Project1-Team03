@@ -78,7 +78,7 @@ const TravelDetail = ({ selectedTravelId }: TravelDetailProps) => {
             const { data } = await supabase
                 .from('travel')
                 .select(
-                    'id, title, destination, num_travelers, start_date, end_date, travel_duration, transportation, budget, note, status',
+                    'id, title, destination, num_travelers, start_date, end_date, travel_duration, transportation, budget, note, status, daily_travel_plan',
                 )
                 .eq('user_id', user.id)
             if (data) {
@@ -732,6 +732,30 @@ const TravelDetail = ({ selectedTravelId }: TravelDetailProps) => {
                                                 </div>
                                             )}
                                         </>
+                                    )}
+                                    <div>임시 테스트 데이터</div>
+                                    {selectedTravelInfo?.daily_travel_plan && (
+                                        <div className="mt-4 border-t pt-4">
+                                            <h4 className="text-lg font-semibold mb-2">일차별 여행 일정</h4>
+                                            {selectedTravelInfo.daily_travel_plan.map((dayPlan: any) => (
+                                                <div key={dayPlan.day} className="mb-4">
+                                                    <h5 className="font-bold text-md mb-1">{dayPlan.day}일차:</h5>
+                                                    {dayPlan.activities.map((activity: any, idx: number) => (
+                                                        <div key={idx} className="ml-4 text-sm text-gray-700">
+                                                            <p>
+                                                                <span className="font-medium">
+                                                                    {activity.start_time}
+                                                                </span>{' '}
+                                                                - {activity.place} ({activity.objective})
+                                                            </p>
+                                                            <p className="ml-4">
+                                                                비용: {activity.cost}, 소요시간: {activity.duration}
+                                                            </p>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            ))}
+                                        </div>
                                     )}
                                 </div>
                                 <div className="flex justify-between mt-6">

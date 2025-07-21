@@ -203,12 +203,28 @@ export function useAISearchChat(
             // 추출을 위한 프롬프트 구성
             // AI에게 어떤 정보를 어떤 형식으로 추출할지 명확하게 지시.
             const extractionPrompt = `다음은 사용자와의 여행 관련 대화 내용입니다. 이
-    대화에서 '목적지, 여행 일정 제목, 여행인원, 여행시작일, 여행종료일, 여행기간, 교통편, 예산'의 순서로 핵심 정보를 추출하여 콤마(,)로
+    대화에서 '목적지, 여행 일정 제목, 여행인원, 여행시작일, 여행종료일, 여행기간, 교통편, 예산, 일차별 여행 일정'의 순서로 핵심 정보를 추출하여 콤마(,)로
     구분된 하나의 문자열로 반환해 주십시오. 목적지는 사용자가 가려고 하는 도시의 이름 또는 관광지 이름으로 반환해 주십시오. 예를 들면 "제주도", "서울", "불국사" 등으로 표현하십시오.
     여행 일정은 사용자의 데이터를 기반으로 해당 여행의 목적을 나타내는 10~20글자의 문장이며 예를 들면 "가족과 함께하는 제주도 여행", "역사와 문화를 체험하는 여행" 등으로 표현하십시오.
     여행인원은 INT형식으로, 여행 시작일과 여행 종료일은 YYYY-MM-DD형식으로, 여행 기간은 여행종료일과 여행시작일의 차이로 계산하여 INT형을 반환해 주십시오.
     교통편은 사용자가 입력하지 않았다면 사용자의 지역에서 해당 지역까지 이동하는 경로를 신중하게 생각해 "항공편", "고속버스", "KTX" 등으로 반환해 주십시오.
     예상금액은 사용자가 입력하지 않았다면 여행 일정과 지역, 여행 인원을 고려하여 예상되는 금액을 반환해 주십시오.
+    일차별 여행 일정은 여행 기간이 n일이라면 n개의 일정을 리스트로 반환해주십시오.각 일정은 시간, 장소, 목적, 비용, 소요시간을 반환해주십시오.
+    -시간은 시간, 분으로 반환해주십시오. 예를 들면 "10:00", "13:00" 등으로 표현하십시오.
+    -장소는 해당 일정의 장소를 반환해주십시오. 예를 들면 "서울 경복궁", "제주 용머리 해안길" 등으로 표현하십시오.
+    -목적은 해당 일정의 목적을 반환해주십시오. 예를 들면 "역사 체험", "자연 경관 감상" 등으로 표현하십시오.
+    -비용은 해당 일정의 비용을 반환해주십시오. 예를 들면 "100,000원", "무료" 등으로 표현하십시오.
+    -소요시간은 해당 일정의 소요시간을 반환해주십시오. 예를 들면 "2시간", "3시간" 등으로 표현하십시오.
+    -
+    [
+  {
+    "day": 1,
+    "activities": [
+      { "start_time": "10:00", "place": "서울역", "objective": "기차 타고 이동", "cost": "10000", "duration": "2시간" },
+      {"start_time": "12:00", "place": "경복궁", "objective": "경복궁 투어", "cost": "5000", "duration": "2시간" }
+    ]
+        } ]
+    처럼 소요시간을 고려하여 만들어주십시오.
     
     --- 대화 내용 ---
     ${conversationText}
@@ -224,10 +240,23 @@ export function useAISearchChat(
                 },
             })
             const extractedSummary = result.text ?? '정보 추출에 실패했습니다.'
+            console.log('AI로부터 추출된 원본 요약:', extractedSummary)
 
-            const [destination, title, peopleCount, startDate, endDate, duration, transport, budget] = extractedSummary
-                .split(',')
+            const parts = extractedSummary.split(',')
+            const [destination, title, peopleCount, startDate, endDate, duration, transport, budget] = parts
+                .slice(0, 8)
                 .map((s) => s.trim())
+            const dailyTravelPlanString = parts.slice(8).join(',').trim() // 나머지 부분을 일차별 여행 일정으로 간주
+            console.log('파싱 전 dailyTravelPlanString:', dailyTravelPlanString)
+
+            let travel_plan = null
+            try {
+                travel_plan = JSON.parse(dailyTravelPlanString)
+                console.log('파싱된 travel_plan:', travel_plan)
+            } catch (e) {
+                console.error('Failed to parse daily travel plan JSON:', e)
+                // JSON 파싱 실패 시 null 또는 기본값 설정
+            }
 
             //로그인했는지 확인, 추후 변경
             const {
@@ -250,7 +279,7 @@ export function useAISearchChat(
                 transportation: transport,
                 budget: Number(budget),
                 status: 'draft',
-                //accommodation_id: 1,
+                daily_travel_plan: travel_plan,
             }
             const { data, error } = await supabase.from('travel').insert([parsedData])
 
