@@ -14,7 +14,7 @@ const API_TYPE_DETAIL_LCLS_SYSTM_CODE = 'lclsSystmCode2'
 //     return value && value.trim() !== '' ? value : null
 // }
 
-export async function GET(_: Request, { params }: { params: { id: string } }) {
+export async function GET(_: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
         const SERVICE_KEY = process.env.PUBLIC_DATA_SERVICE_KEY
         if (!SERVICE_KEY) {
