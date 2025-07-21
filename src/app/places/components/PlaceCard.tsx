@@ -42,19 +42,20 @@ export default function PlaceCard({
                         </span>
                     )}
                 </div>
-
-                <div className="absolute top-4 right-4">
-                    <AddToTravelButton placeId={place.contentid} onAddToTravel={onAddToTravel} />
-                </div>
             </div>
 
             <div className="p-6">
-                <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-lg font-bold text-gray-800 mb-2 line-clamp-2">{place.title}</h3>
+                <div className="flex items-center justify-between gap-2">
+                    <h3 className="text-lg font-bold text-gray-800 line-clamp-1 truncate flex-1">{place.title}</h3>
+                    <AddToTravelButton
+                        placeId={place.contentid}
+                        placeName={place.title}
+                        className="border border-gray-200 flex-shrink-0 min-w-[120px]"
+                    />
                 </div>
 
                 {place.addr1 && (
-                    <div className="text-sm text-gray-500 flex items-center gap-1">
+                    <div className="text-sm text-gray-500 flex items-center gap-1 mt-2">
                         <i className="ri-map-pin-line text-gray-400"></i>
                         <span>{place.addr1}</span>
                     </div>
