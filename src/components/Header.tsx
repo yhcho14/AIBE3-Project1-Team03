@@ -40,6 +40,7 @@ export default function Header() {
             setProfileImg(data?.profile_img ?? '')
         }
         fetchProfileImg()
+        router.refresh()
     }, [user])
 
     const handleLogout = async () => {
