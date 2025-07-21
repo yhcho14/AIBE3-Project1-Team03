@@ -6,8 +6,10 @@ import TravelPlanner from './TravelPlanner'
 import UserProfile from './UserProfile'
 import TravelDetail from './TravelDetail'
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 export default function MyPage() {
+    const router = useRouter()
     const [activeTab, setActiveTab] = useState('planner')
     const [selectedTravelId, setSelectedTravelId] = useState<number | null>(null)
 
@@ -28,13 +30,11 @@ export default function MyPage() {
 
             <div className="pt-24 pb-16">
                 <div className="max-w-7xl mx-auto px-6">
-                    {/* Welcome Section */}
                     <div className="mb-8">
                         <h1 className="text-3xl font-bold text-gray-800 mb-2">마이페이지</h1>
                         <p className="text-gray-600">여행 계획을 세우고 관리해보세요</p>
                     </div>
 
-                    {/* Tab Navigation */}
                     <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-8">
                         <div className="flex border-b border-gray-200">
                             {tabs.map((tab) => (
@@ -53,7 +53,6 @@ export default function MyPage() {
                             ))}
                         </div>
 
-                        {/* Tab Content */}
                         <div className="p-6">
                             {activeTab === 'planner' && <TravelPlanner onDetailView={handleTravelDetailView} />}
                             {/* {activeTab === 'trips' && <MyTrips />} */}
