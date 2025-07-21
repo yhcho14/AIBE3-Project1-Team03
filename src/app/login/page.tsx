@@ -73,7 +73,7 @@ export default function LoginPage() {
         // 잠시 후 홈페이지로 이동
         setTimeout(() => {
             router.push('/')
-        }, 1500)
+        }, 1000)
     }
 
     return (
