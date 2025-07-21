@@ -30,6 +30,13 @@ export function useUserProfile() {
     const [newPasswordValid, setNewPasswordValid] = useState<boolean | null>(null)
     const [passwordsMatch, setPasswordsMatch] = useState<boolean | null>(null)
 
+    // 계정 삭제 관련 상태
+    const [showDeleteAccount, setShowDeleteAccount] = useState(false)
+    const [deletePassword, setDeletePassword] = useState('')
+    const [deletePasswordValid, setDeletePasswordValid] = useState<boolean | null>(null)
+    const [deleteError, setDeleteError] = useState<string | null>(null)
+    const [isDeleting, setIsDeleting] = useState(false)
+
     useEffect(() => {
         const fetchProfile = async () => {
             const {
@@ -147,43 +154,98 @@ export function useUserProfile() {
     }
 
     const handleDeleteAccount = async () => {
-        const confirmed = window.confirm('정말로 계정을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')
-        if (!confirmed) return
-        const password = window.prompt('계정 삭제를 위해 비밀번호를 입력하세요.')
-        if (!password) {
-            alert('비밀번호를 입력해야 계정이 삭제됩니다.')
+        setShowDeleteAccount(true)
+        setDeletePassword('')
+        setDeletePasswordValid(null)
+        setDeleteError(null)
+    }
+
+    const checkDeletePassword = async () => {
+        setDeleteError(null)
+        setDeletePasswordValid(null)
+
+        if (!deletePassword.trim()) {
+            setDeletePasswordValid(false)
+            setDeleteError('비밀번호를 입력해주세요.')
             return
         }
+
         const {
             data: { user },
         } = await supabase.auth.getUser()
-        if (!user) return
-        if (!user.email) {
-            alert('이메일 정보를 찾을 수 없습니다.')
+        if (!user || !user.email) {
+            setDeleteError('유저 정보를 불러올 수 없습니다.')
             return
         }
+
         const { error: signInError } = await supabase.auth.signInWithPassword({
             email: user.email,
-            password,
+            password: deletePassword,
         })
+
         if (signInError) {
-            alert('비밀번호가 올바르지 않습니다.')
+            setDeletePasswordValid(false)
+            setDeleteError('비밀번호가 올바르지 않습니다.')
+        } else {
+            setDeletePasswordValid(true)
+            setDeleteError(null)
+        }
+    }
+
+    const confirmDeleteAccount = async () => {
+        if (!deletePasswordValid) {
+            setDeleteError('비밀번호를 확인해주세요.')
             return
         }
-        await supabase
-            .from('user_profile')
-            .update({
-                nickname: '',
-                introduce: '',
-                interests: '',
-                birth_date: null,
-                gender: null,
-                profile_img: '',
-                is_deleted: true,
-            })
-            .eq('user_id', user.id)
-        await supabase.auth.signOut()
-        window.location.href = '/'
+
+        setIsDeleting(true)
+        setDeleteError(null)
+
+        try {
+            const {
+                data: { user },
+            } = await supabase.auth.getUser()
+            if (!user) {
+                setDeleteError('유저 정보를 불러올 수 없습니다.')
+                return
+            }
+
+            // user_profile 테이블에서 계정 정보 삭제 (소프트 삭제)
+            const { error: profileError } = await supabase
+                .from('user_profile')
+                .update({
+                    nickname: '',
+                    introduce: '',
+                    interests: '',
+                    birth_date: null,
+                    gender: null,
+                    profile_img: '',
+                    is_deleted: true,
+                })
+                .eq('user_id', user.id)
+
+            if (profileError) {
+                setDeleteError('프로필 삭제에 실패했습니다.')
+                return
+            }
+
+            // 계정 삭제 대신 로그아웃 후 홈페이지로 이동
+            // 실제 계정 삭제는 관리자가 나중에 처리할 수 있도록 is_deleted 플래그만 설정
+            await supabase.auth.signOut()
+            window.location.href = '/'
+        } catch (error) {
+            setDeleteError('계정 삭제 중 오류가 발생했습니다.')
+        } finally {
+            setIsDeleting(false)
+        }
+    }
+
+    const cancelDeleteAccount = () => {
+        setShowDeleteAccount(false)
+        setDeletePassword('')
+        setDeletePasswordValid(null)
+        setDeleteError(null)
+        setIsDeleting(false)
     }
 
     const handlePasswordChange = async () => {
@@ -298,5 +360,18 @@ export function useUserProfile() {
         handlePasswordChange,
         checkCurrentPassword,
         validateNewPassword,
+        showDeleteAccount,
+        setShowDeleteAccount,
+        deletePassword,
+        setDeletePassword,
+        deletePasswordValid,
+        setDeletePasswordValid,
+        deleteError,
+        setDeleteError,
+        isDeleting,
+        setIsDeleting,
+        checkDeletePassword,
+        confirmDeleteAccount,
+        cancelDeleteAccount,
     }
 }

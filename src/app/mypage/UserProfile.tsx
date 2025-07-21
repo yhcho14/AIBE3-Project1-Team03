@@ -8,6 +8,42 @@ import { UserProfileType } from '../../hooks/useUserProfile'
 import { useRouter } from 'next/navigation'
 
 export default function UserProfile() {
+    const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null)
+    useEffect(() => {
+        const checkSession = async () => {
+            const {
+                data: { session },
+            } = await supabase.auth.getSession()
+            setIsLoggedIn(!!session)
+        }
+        checkSession()
+    }, [])
+
+    if (isLoggedIn === false) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[300px]">
+                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+                    <i className="ri-lock-2-line text-blue-500 text-3xl"></i>
+                </div>
+                <div className="text-xl font-bold text-gray-800 mb-2">로그인이 필요합니다</div>
+                <div className="text-gray-600 mb-4">마이페이지를 이용하려면 로그인이 필요합니다.</div>
+                <button
+                    onClick={() => (location.href = '/login')}
+                    className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+                >
+                    로그인 하러가기
+                </button>
+            </div>
+        )
+    }
+    if (isLoggedIn === null) {
+        return (
+            <div className="flex items-center justify-center min-h-[300px]">
+                <div className="animate-spin w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full"></div>
+            </div>
+        )
+    }
+
     const {
         isEditing,
         setIsEditing,
@@ -48,6 +84,19 @@ export default function UserProfile() {
         handlePasswordChange,
         checkCurrentPassword,
         validateNewPassword,
+        showDeleteAccount,
+        setShowDeleteAccount,
+        deletePassword,
+        setDeletePassword,
+        deletePasswordValid,
+        setDeletePasswordValid,
+        deleteError,
+        setDeleteError,
+        isDeleting,
+        setIsDeleting,
+        checkDeletePassword,
+        confirmDeleteAccount,
+        cancelDeleteAccount,
     } = useUserProfile()
 
     const router = useRouter()
@@ -487,14 +536,74 @@ export default function UserProfile() {
                     )}
                     <button
                         className="w-full text-left px-4 py-3 border border-red-200 rounded-lg hover:bg-red-50 transition-colors flex items-center justify-between text-red-600"
-                        onClick={handleDeleteAccount}
+                        onClick={() => setShowDeleteAccount(true)}
                     >
                         <div className="flex items-center space-x-3">
                             <i className="ri-delete-bin-line"></i>
                             <span>계정 삭제</span>
                         </div>
-                        <i className="ri-arrow-right-s-line"></i>
+                        <i className="ri-arrow-down-s-line text-gray-400"></i>
                     </button>
+                    {showDeleteAccount && (
+                        <div className="mt-4 space-y-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                            <div className="flex items-center space-x-2 text-red-700">
+                                <i className="ri-error-warning-line text-lg"></i>
+                                <span className="font-semibold">계정 삭제</span>
+                            </div>
+                            <p className="text-red-700 text-sm">
+                                계정을 삭제하면 모든 데이터가 영구적으로 삭제되며 복구할 수 없습니다.
+                                <br />
+                                삭제 후에는 로그아웃되어 홈페이지로 이동합니다.
+                            </p>
+                            <div className="space-y-3">
+                                <input
+                                    type="password"
+                                    placeholder="계정 삭제를 위해 비밀번호를 입력하세요"
+                                    value={deletePassword}
+                                    onChange={(e) => {
+                                        setDeletePassword(e.target.value)
+                                        setDeletePasswordValid(null)
+                                        setDeleteError(null)
+                                    }}
+                                    onBlur={checkDeletePassword}
+                                    className="w-full px-3 py-2 border border-red-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                                />
+                                {deletePasswordValid === true && (
+                                    <div className="text-green-600 text-sm">비밀번호가 확인되었습니다.</div>
+                                )}
+                                {deletePasswordValid === false && (
+                                    <div className="text-red-500 text-sm">비밀번호가 올바르지 않습니다.</div>
+                                )}
+                                {deleteError && <div className="text-red-500 text-sm">{deleteError}</div>}
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={confirmDeleteAccount}
+                                        disabled={!deletePasswordValid || isDeleting}
+                                        className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                                    >
+                                        {isDeleting ? (
+                                            <>
+                                                <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
+                                                <span>삭제 중...</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <i className="ri-delete-bin-line"></i>
+                                                <span>계정 삭제</span>
+                                            </>
+                                        )}
+                                    </button>
+                                    <button
+                                        onClick={cancelDeleteAccount}
+                                        disabled={isDeleting}
+                                        className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+                                    >
+                                        취소
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
