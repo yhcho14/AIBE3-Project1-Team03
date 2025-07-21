@@ -56,7 +56,7 @@ export default function AISearchExpandableInput() {
                         onFocus={openChat}
                         readOnly // 클릭해서 열리는 용도로만 사용
                     />
-                    <span className="text-xs text-gray-500 whitespace-nowrap mt-3 mr-">AI에게</span>
+                    <span className="text-xs text-gray-500 whitespace-nowrap mt-3 mr-1">AI에게</span>
                     <button
                         onClick={getRecommendation}
                         className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 text-sm whitespace-nowrap"
