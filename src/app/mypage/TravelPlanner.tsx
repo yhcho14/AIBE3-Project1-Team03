@@ -509,7 +509,7 @@ export default function TravelPlanner({ onDetailView }: TravelPlannerProps) {
                     <div className="flex items-center justify-between">
                         <div>
                             <div className="text-2xl font-bold">
-                                {plans.filter((p) => p.status === 'confirmed').length}
+                                {plans.filter((p) => p.status === 'completed').length}
                             </div>
                             <div className="text-purple-100">완료된 여행</div>
                         </div>

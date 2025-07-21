@@ -43,8 +43,8 @@ const SYSTEM_PROMPT = `당신은 사용자에게 여행 및 지역 정보를 제
    `
 
 export function useAISearchChat(
-    containerRef: React.RefObject<HTMLDivElement>,
-    chatMessagesRef: React.RefObject<HTMLDivElement>,
+    containerRef: React.RefObject<HTMLDivElement | null>,
+    chatMessagesRef: React.RefObject<HTMLDivElement | null>,
 ) {
     const [query, setQuery] = useState('')
     const [isChatOpen, setIsChatOpen] = useState(false)
