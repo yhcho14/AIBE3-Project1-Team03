@@ -1,4 +1,4 @@
-export const API_PUBLIC_DATA_BASE_URL = 'http://apis.data.go.kr/B551011/KorService2/'
+export const API_PUBLIC_DATA_BASE_URL = 'https://apis.data.go.kr/B551011/KorService2/'
 
 export const AREA_CODE_MAP = new Map<string, string>([
     ['1', '서울'],
