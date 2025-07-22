@@ -13,7 +13,7 @@ export default function Footer() {
               <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
                 <i className="ri-map-pin-2-fill text-white text-lg"></i>
               </div>
-              <span className="text-xl font-bold text-gray-800 font-pacifico">TripAI</span>
+              <span className="text-xl font-bold text-gray-800 font-pacifico">TripleAI</span>
             </div>
             <p className="text-gray-600 mb-4 max-w-md">
               AI와 함께하는 스마트한 여행 계획. 개인 맞춤형 추천부터 상세한 일정 관리까지, 
@@ -55,7 +55,7 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-gray-200 mt-8 pt-8 text-center">
-          <p className="text-gray-500">© 2024 TripAI. All rights reserved.</p>
+          <p className="text-gray-500">© 2024 TripleAI. All rights reserved.</p>
         </div>
       </div>
     </footer>
