@@ -1,7 +1,8 @@
 'use client'
 
-import { useRef } from 'react'
+import { useRef, useState } from 'react' // useState 추가
 import { useAISearchChat } from '../hooks/useAISearchChat'
+import Toast from './Toast' // Toast 컴포넌트 import
 
 interface Message {
     role: 'user' | 'ai'
@@ -12,6 +13,20 @@ export default function AISearchExpandableInput() {
     // input 박스 ref (포커스 관리용)
     const containerRef = useRef<HTMLDivElement>(null)
     const chatMessagesRef = useRef<HTMLDivElement>(null)
+
+    // Toast 상태 관리
+    const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info'; isVisible: boolean }>(
+        {
+            message: '',
+            type: 'info',
+            isVisible: false,
+        },
+    )
+
+    // Toast를 표시하는 함수
+    const showToast = (message: string, type: 'success' | 'error' | 'info') => {
+        setToast({ message, type, isVisible: true })
+    }
 
     const {
         query,
@@ -31,7 +46,7 @@ export default function AISearchExpandableInput() {
         replyFinalDecision,
         generateTravelPlanSummary,
         sendDirectMessage, // sendDirectMessage 추가
-    } = useAISearchChat(containerRef, chatMessagesRef)
+    } = useAISearchChat(containerRef, chatMessagesRef, showToast) // showToast 콜백 전달
 
     return (
         <div
@@ -68,24 +83,35 @@ export default function AISearchExpandableInput() {
                 {/* input 아래에 자연스럽게 확장되는 채팅 UI */}
                 <div
                     className={`overflow-hidden transition-max-height duration-300 ease-in-out ${
-                        isChatOpen ? 'max-h-[400px]' : 'max-h-0'
+                        isChatOpen ? 'max-h-[600px]' : 'max-h-0'
                     }`}
                 >
-                    <div className="p-6 bg-white border-t border-gray-300 rounded-b-xl flex flex-col h-[300px]">
-                        <div ref={chatMessagesRef} className="flex-1 overflow-y-auto mb-4 space-y-3">
+                    <div className="p-6 bg-white border-t border-gray-300 rounded-b-xl flex flex-col">
+                        <div
+                            ref={chatMessagesRef}
+                            className="overflow-y-auto mb-4 space-y-3 rounded-lg resize-y"
+                            style={{
+                                minHeight: '150px',
+                                maxHeight: '400px',
+                                height: '150px', // 초기 높이
+                                resize: 'vertical',
+                            }}
+                        >
                             {chatHistory.length === 0 && (
                                 <p className="text-gray-400 text-center">여기에 AI와 채팅이 표시됩니다.</p>
                             )}
                             {chatHistory.map((msg, idx) => (
                                 <div
                                     key={idx}
-                                    className={`max-w-[80%] p-3 rounded-xl text-sm ${
-                                        msg.role === 'user'
-                                            ? 'bg-blue-100 self-end text-right'
-                                            : 'bg-gray-100 self-start text-left'
-                                    }`}
+                                    className={`w-full flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                                 >
-                                    {msg.text}
+                                    <div
+                                        className={`max-w-[60%] p-3 rounded-xl text-sm break-words ${
+                                            msg.role === 'user' ? 'bg-blue-100 text-right' : 'bg-gray-100 text-left'
+                                        }`}
+                                    >
+                                        {msg.text}
+                                    </div>
                                 </div>
                             ))}
                             {isLoading && <div className="text-gray-400 text-sm">AI가 응답을 작성 중입니다...</div>}
@@ -135,6 +161,14 @@ export default function AISearchExpandableInput() {
                     </div>
                 </div>
             </div>
+
+            {/* Toast 알림 컴포넌트 */}
+            <Toast
+                message={toast.message}
+                type={toast.type}
+                isVisible={toast.isVisible}
+                onClose={() => setToast({ ...toast, isVisible: false })}
+            />
         </div>
     )
 }

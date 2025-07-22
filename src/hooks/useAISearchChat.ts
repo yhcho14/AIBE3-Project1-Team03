@@ -104,6 +104,7 @@ AI: 죄송합니다. 저는 여행 및 지역 정보에 대한 질문에만 답�
 export function useAISearchChat(
     containerRef: React.RefObject<HTMLDivElement | null>,
     chatMessagesRef: React.RefObject<HTMLDivElement | null>,
+    showToast: (message: string, type: 'success' | 'error' | 'info') => void, // showToast 콜백 추가
 ) {
     const [query, setQuery] = useState('')
     const [isChatOpen, setIsChatOpen] = useState(false)
@@ -286,10 +287,10 @@ export function useAISearchChat(
 
             if (error) {
                 console.error('삽입 오류:', error)
-                alert('저장 실패')
+                showToast('저장 실패', 'error')
             } else {
                 console.log('삽입 성공:', data)
-                alert('저장 완료')
+                showToast('저장 완료', 'success')
             }
 
             return extractedSummary.trim()
@@ -392,11 +393,28 @@ export function useAISearchChat(
 
     const replyFinalDecision = async () => {
         console.log('일정 생성 버튼 클릭됨')
-        // AI에게 요약 생성을 요청하고 결과 대기
-        const summary = await generateTravelPlanSummary()
-        console.log('추출된 여행 계획 요약:', summary)
-        // 추출된 요약
-        alert(`생성된 여행 계획 요약:\n${summary}`) // 예시 alert
+        setIsLoading(true)
+        try {
+            // AI에게 요약 생성을 요청하고 결과 대기
+            const summary = await generateTravelPlanSummary()
+            console.log('추출된 여행 계획 요약:', summary)
+
+            // 채팅창에 완료 메시지 추가
+            const successMessage: Message = {
+                role: 'ai',
+                text: '여행 계획이 성공적으로 생성되었습니다. 마이페이지에서 확인하거나 계속해서 대화를 이어갈 수 있습니다.',
+            }
+            setChatHistory((prev) => [...prev, successMessage])
+        } catch (error) {
+            console.error('Error in replyFinalDecision:', error)
+            const errorMessage: Message = {
+                role: 'ai',
+                text: '오류가 발생하여 여행 계획을 생성하지 못했습니다. 다시 시도해 주세요.',
+            }
+            setChatHistory((prev) => [...prev, errorMessage])
+        } finally {
+            setIsLoading(false)
+        }
     }
 
     const sendDirectMessage = async (messageText: string) => {
