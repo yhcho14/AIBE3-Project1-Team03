@@ -100,7 +100,7 @@ export default function AddToTravelButton({ placeId, placeName, className }: Add
                                 ) : (
                                     <>
                                         <p className="text-gray-600 mb-4">
-                                            "{placeName}"을(를) 추가할 여행 계획을 선택해주세요.
+                                            &quot;{placeName}&quot;을(를) 추가할 여행 계획을 선택해주세요.
                                         </p>
                                         <div className="space-y-2 mb-6">
                                             {travelPlans.map((plan) => (
@@ -146,7 +146,7 @@ export default function AddToTravelButton({ placeId, placeName, className }: Add
                         {modalStep === 'add' && selectedPlanId && (
                             <div className="pt-2">
                                 <div className="text-xl font-bold text-gray-900 mb-2">
-                                    "{placeName}"을(를) 일정에 추가해보세요.
+                                    &quot;{placeName}&quot;을(를) 일정에 추가해보세요.
                                 </div>
                                 <div className="border-b border-gray-200 mb-4"></div>
                                 <Suspense
