@@ -107,3 +107,42 @@ export const getUserNames = async (userIds: string[]) => {
     }
     return userNames
 }
+
+// 게시글 테이블과 좋아요 테이블을 조합해서 location별 좋아요 수 집계 후, 상위 6개 인기 지역을 가져오는 함수
+export const getPopularLocations = async (limit = 6) => {
+    // 1. 모든 좋아요(post_recommends)와 posts를 조인해서 location별로 집계
+    const { data: recommends, error } = await supabase
+        .from('post_recommends')
+        .select('post_id')
+
+    if (error || !recommends) return []
+
+    // 2. post_id별로 posts에서 location을 가져옴
+    const postIds = [...new Set((recommends as { post_id: number }[]).map(r => r.post_id))]
+    if (postIds.length === 0) return []
+
+    const { data: posts, error: postError } = await supabase
+        .from('posts')
+        .select('id, location')
+        .in('id', postIds)
+
+    if (postError || !posts) return []
+
+    // 3. post_id -> location 매핑
+    const postIdToLocation: { [key: number]: string } = Object.fromEntries((posts as { id: number, location: string }[]).map(p => [p.id, p.location]))
+
+    // 4. location별 좋아요 수 집계
+    const locationLikes: { [key: string]: number } = {}
+    const recommendsArr = recommends as { post_id: number }[]
+    recommendsArr.forEach((r) => {
+        const loc = postIdToLocation[r.post_id]
+        if (!loc) return
+        locationLikes[loc] = (locationLikes[loc] || 0) + 1
+    })
+
+    // 5. 좋아요 많은 순으로 정렬 후 상위 limit개 추출
+    return (Object.entries(locationLikes) as [string, number][]) // 타입 단언
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, limit)
+        .map(([location, totalLikes]) => ({ location, totalLikes }))
+}

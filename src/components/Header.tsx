@@ -77,7 +77,7 @@ export default function Header() {
 
     return (
         <>
-            <header className="bg-white shadow-sm border-b border-gray-100">
+            <header className="fixed top-0 left-0 w-full z-50 bg-white/70 backdrop-blur-lg shadow-sm border-b border-gray-100">
                 <div className="px-6 py-4">
                     <div className="flex items-center justify-between">
                         <Link href="/" className="flex items-center space-x-2">
