@@ -54,7 +54,7 @@ const SYSTEM_PROMPT = `
 AI: 좋습니다! *필수* 여행 시작일, 여행 기간, 여행 예산을 알려주세요
 
 🗓️ 날짜 계산 규칙:
-- 오늘 날짜는 "2025-07-21"로 간주합니다.
+- 오늘 날짜는 "2025-07-22"로 간주합니다.
 - 여행 시작일 + 여행 기간 → 종료일 자동 계산
 - 여행 시작일 + 종료일 → 기간 자동 계산
 
@@ -84,6 +84,7 @@ AI: 좋습니다! *필수* 여행 시작일, 여행 기간, 여행 예산을 알
 🧠 [추가 정보 유도]
 
 목적지가 정해졌다면, 사용자에게 유용한 여행 정보를 더 얻기 위해 **간단한 한 줄 질문**을 덧붙여주세요. 이 때, 질문은 좋아/별로야/모르겠어 로 답할 수 있도록 명확한 질문을 하십시오.
+미리 여행 계획을 짜는 등의 행위는 하지 말고 사용자의 답변에 대한 간단한 반응과 한 줄 질문만을 하십시오.
 예: "여행하시는 계절에 따라 옷차림 정보가 필요하신가요?", "걸어다니는 걸 좋아하시는 편인가요?"
 
 ---
@@ -103,6 +104,7 @@ AI: 죄송합니다. 저는 여행 및 지역 정보에 대한 질문에만 답�
 export function useAISearchChat(
     containerRef: React.RefObject<HTMLDivElement | null>,
     chatMessagesRef: React.RefObject<HTMLDivElement | null>,
+    showToast: (message: string, type: 'success' | 'error' | 'info') => void, // showToast 콜백 추가
 ) {
     const [query, setQuery] = useState('')
     const [isChatOpen, setIsChatOpen] = useState(false)
@@ -285,10 +287,10 @@ export function useAISearchChat(
 
             if (error) {
                 console.error('삽입 오류:', error)
-                alert('저장 실패')
+                showToast('저장 실패', 'error')
             } else {
                 console.log('삽입 성공:', data)
-                alert('저장 완료')
+                showToast('저장 완료', 'success')
             }
 
             return extractedSummary.trim()
@@ -391,11 +393,28 @@ export function useAISearchChat(
 
     const replyFinalDecision = async () => {
         console.log('일정 생성 버튼 클릭됨')
-        // AI에게 요약 생성을 요청하고 결과 대기
-        const summary = await generateTravelPlanSummary()
-        console.log('추출된 여행 계획 요약:', summary)
-        // 추출된 요약
-        alert(`생성된 여행 계획 요약:\n${summary}`) // 예시 alert
+        setIsLoading(true)
+        try {
+            // AI에게 요약 생성을 요청하고 결과 대기
+            const summary = await generateTravelPlanSummary()
+            console.log('추출된 여행 계획 요약:', summary)
+
+            // 채팅창에 완료 메시지 추가
+            const successMessage: Message = {
+                role: 'ai',
+                text: '여행 계획이 성공적으로 생성되었습니다. 마이페이지에서 확인하거나 계속해서 대화를 이어갈 수 있습니다.',
+            }
+            setChatHistory((prev) => [...prev, successMessage])
+        } catch (error) {
+            console.error('Error in replyFinalDecision:', error)
+            const errorMessage: Message = {
+                role: 'ai',
+                text: '오류가 발생하여 여행 계획을 생성하지 못했습니다. 다시 시도해 주세요.',
+            }
+            setChatHistory((prev) => [...prev, errorMessage])
+        } finally {
+            setIsLoading(false)
+        }
     }
 
     const sendDirectMessage = async (messageText: string) => {
