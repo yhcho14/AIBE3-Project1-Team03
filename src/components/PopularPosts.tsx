@@ -45,22 +45,40 @@ export default function PopularPosts() {
 
   return (
     <section className="max-w-5xl mx-auto px-6 py-12">
-      <h2 className="text-2xl font-bold mb-6 text-gray-800">🔥 좋아요 많은 인기 게시글</h2>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {posts.map((post) => (
-          <div
-            key={post.id}
-            className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-shadow cursor-pointer"
-            onClick={() => router.push(`/board/${post.id}`)}
-          >
-            {post.image && (
-              <img src={post.image} alt={post.title} className="w-full h-40 object-cover rounded mb-4" />
-            )}
-            <h3 className="text-lg font-bold text-gray-800 mb-2">{post.title}</h3>
-            <p className="text-gray-600 text-sm mb-2 line-clamp-2">{post.contents}</p>
-            <div className="text-sm text-pink-600 font-semibold">❤️ {post.like_count} 좋아요</div>
-          </div>
-        ))}
+      <h2 className="text-2xl font-bold text-gray-800 mb-2">🔥 좋아요 많은 인기 게시글</h2>
+      <div className="flex justify-end mb-4">
+        <button
+          className="text-sm text-blue-600 hover:underline font-medium"
+          onClick={() => router.push('/board')}
+          type="button"
+        >
+          게시글 더보기
+        </button>
+      </div>
+      <div className="relative">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {posts.map((post) => (
+            <div
+              key={post.id}
+              className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() => router.push(`/board/${post.id}`)}
+            >
+              {post.image ? (
+                <img src={post.image} alt={post.title} className="w-full h-40 object-cover rounded mb-4" />
+              ) : (
+                <div className="w-full h-40 bg-gray-200 flex items-center justify-center rounded mb-4">
+                  <svg width="48" height="48" fill="none" viewBox="0 0 24 24">
+                    <rect width="24" height="24" rx="4" fill="#e5e7eb"/>
+                    <path d="M7 17l3-3.86a1 1 0 0 1 1.54-.04L15 17m-8 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2z" stroke="#9ca3af" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+              )}
+              <h3 className="text-lg font-bold text-gray-800 mb-2">{post.title}</h3>
+              <p className="text-gray-600 text-sm mb-2 line-clamp-2">{post.contents}</p>
+              <div className="text-sm text-pink-600 font-semibold">❤️ {post.like_count} 좋아요</div>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );
