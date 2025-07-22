@@ -8,7 +8,6 @@ import PostSearchBar from './components/PostSearchBar'
 
 import NoResultsMessage from './components/NoResultsMessage'
 
-
 interface Post {
     id: number
     title: string
