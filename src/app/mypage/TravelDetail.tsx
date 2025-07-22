@@ -435,93 +435,112 @@ const TravelDetail = ({ selectedTravelId }: TravelDetailProps) => {
                         <h2 className="text-2xl font-bold text-gray-800">여행 일정 계획</h2>
                         <p className="text-gray-600 mt-1">나의 여행 일정을 세부적으로 계획하세요</p>
                     </div>
-                    <div className="flex items-center space-x-2">
-                        <select
-                            className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors flex items-center space-x-2 whitespace-nowrap"
-                            value={selectedTravel ?? undefined}
-                            onChange={(e) => setSelectedTravel(Number(e.target.value))}
-                        >
-                            {travels.map((travel) => (
-                                <option key={travel.id} value={travel.id}>
-                                    {travel.title}
-                                </option>
-                            ))}
-                        </select>
+                    {travels.length > 0 && (
+                        <div className="flex items-center space-x-2">
+                            <select
+                                className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors flex items-center space-x-2 whitespace-nowrap"
+                                value={selectedTravel ?? undefined}
+                                onChange={(e) => setSelectedTravel(Number(e.target.value))}
+                            >
+                                {travels.map((travel) => (
+                                    <option key={travel.id} value={travel.id}>
+                                        {travel.title}
+                                    </option>
+                                ))}
+                            </select>
+                            <button
+                                onClick={() => setIsAddingEvent(true)}
+                                className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center space-x-2 whitespace-nowrap"
+                            >
+                                <i className="ri-add-line"></i>
+                                <span>새 일정 추가</span>
+                            </button>
+                        </div>
+                    )}
+                </div>
+
+                {travels.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-20 text-center">
+                        <div className="text-gray-400 text-6xl mb-4">
+                            <i className="ri-calendar-line"></i>
+                        </div>
+                        <h3 className="text-xl font-semibold text-gray-700 mb-2">등록된 여행 계획이 없습니다</h3>
+                        <p className="text-gray-500 mb-6">여행 플래너에서 새로운 여행을 계획해보세요!</p>
                         <button
-                            onClick={() => setIsAddingEvent(true)}
-                            className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center space-x-2 whitespace-nowrap"
+                            onClick={() => (window.location.href = '/mypage')}
+                            className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition-colors"
                         >
-                            <i className="ri-add-line"></i>
-                            <span>새 일정 추가</span>
+                            여행 플래너로 이동
                         </button>
                     </div>
-                </div>
-                <FullCalendar
-                    key={selectedTravel} // 여행 변경 시 달력 재렌더링
-                    plugins={[timeGridPlugin]}
-                    initialView="timeGridWeek"
-                    initialDate={selectedTravelInfo ? selectedTravelInfo.start_date : undefined}
-                    headerToolbar={{
-                        left: 'prev,next today',
-                        center: 'title',
-                        right: 'timeGridWeek,timeGridDay',
-                    }}
-                    events={combinedEvents}
-                    firstDay={1}
-                    slotMinTime="06:00"
-                    height="auto"
-                    eventContent={(arg) => {
-                        const event = arg.event
-                        const commonStyle =
-                            'display: block; white-space: normal; word-break: break-all; overflow-wrap: break-word;'
-                        if (event.allDay) {
-                            const startDate = event.start ? event.start.toLocaleDateString() : ''
-                            const endDate = event.end
-                                ? new Date(event.end.getTime() - 86400000).toLocaleDateString()
-                                : startDate
-                            return {
-                                html: `<div style="${commonStyle}">
-                                            <div style="line-height: 1; margin-bottom: 2px;">${event.title}</div>
-                                            <div style="font-size: 0.9em; font-weight: bold; color: yellow; line-height: 1; margin-top: 0; display: inline-block; min-width: 50px; min-height: 20px;">
-                                                ${startDate} ~ ${endDate}
-                                            </div>
-                                       </div>`,
+                ) : (
+                    <FullCalendar
+                        key={selectedTravel} // 여행 변경 시 달력 재렌더링
+                        plugins={[timeGridPlugin]}
+                        initialView="timeGridWeek"
+                        initialDate={selectedTravelInfo ? selectedTravelInfo.start_date : undefined}
+                        headerToolbar={{
+                            left: 'prev,next today',
+                            center: 'title',
+                            right: 'timeGridWeek,timeGridDay',
+                        }}
+                        events={combinedEvents}
+                        firstDay={1}
+                        slotMinTime="06:00"
+                        height="auto"
+                        eventContent={(arg) => {
+                            const event = arg.event
+                            const commonStyle =
+                                'display: block; white-space: normal; word-break: break-all; overflow-wrap: break-word;'
+                            if (event.allDay) {
+                                const startDate = event.start ? event.start.toLocaleDateString() : ''
+                                const endDate = event.end
+                                    ? new Date(event.end.getTime() - 86400000).toLocaleDateString()
+                                    : startDate
+                                return {
+                                    html: `<div style="${commonStyle}">
+                                                <div style="line-height: 1; margin-bottom: 2px;">${event.title}</div>
+                                                <div style="font-size: 0.9em; font-weight: bold; color: yellow; line-height: 1; margin-top: 0; display: inline-block; min-width: 50px; min-height: 20px;">
+                                                    ${startDate} ~ ${endDate}
+                                                </div>
+                                           </div>`,
+                                }
+                            } else {
+                                const startTime = event.start
+                                    ? event.start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                                    : ''
+                                const endTime = event.end
+                                    ? event.end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                                    : ''
+                                return {
+                                    html: `<div style="${commonStyle}">
+                                                <div style="line-height: 1; margin-bottom: 2px;">${event.title}</div>
+                                                <div style="font-size: 0.9em; font-weight: bold; color: yellow; line-height: 1; margin-top: 0; display: inline-block;">
+                                                    ${startTime} - ${endTime}
+                                                </div>
+                                           </div>`,
+                                }
                             }
-                        } else {
-                            const startTime = event.start
-                                ? event.start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                                : ''
-                            const endTime = event.end
-                                ? event.end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                                : ''
-                            return {
-                                html: `<div style="${commonStyle}">
-                                            <div style="line-height: 1; margin-bottom: 2px;">${event.title}</div>
-                                            <div style="font-size: 0.9em; font-weight: bold; color: yellow; line-height: 1; margin-top: 0; display: inline-block;">
-                                                ${startTime} - ${endTime}
-                                            </div>
-                                       </div>`,
-                            }
-                        }
-                    }}
-                    eventClick={(arg) => {
-                        const event = arg.event
-                        setSelectedEventDetail({
-                            id: event.id,
-                            title: event.title,
-                            start: event.start,
-                            end: event.end,
-                            allDay: event.allDay,
-                            note: event.extendedProps.note || '',
-                            destination: event.extendedProps.destination,
-                            numTravelers: event.extendedProps.numTravelers,
-                            travelDuration: event.extendedProps.travelDuration,
-                            transportation: event.extendedProps.transportation,
-                            budget: event.extendedProps.budget,
-                            status: event.extendedProps.status,
-                        })
-                    }}
-                />
+                        }}
+                        eventClick={(arg) => {
+                            const event = arg.event
+                            setSelectedEventDetail({
+                                id: event.id,
+                                title: event.title,
+                                start: event.start,
+                                end: event.end,
+                                allDay: event.allDay,
+                                note: event.extendedProps.note || '',
+                                destination: event.extendedProps.destination,
+                                numTravelers: event.extendedProps.numTravelers,
+                                travelDuration: event.extendedProps.travelDuration,
+                                transportation: event.extendedProps.transportation,
+                                budget: event.extendedProps.budget,
+                                status: event.extendedProps.status,
+                            })
+                        }}
+                    />
+                )}
             </div>
             {isAddingEvent && (
                 <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
