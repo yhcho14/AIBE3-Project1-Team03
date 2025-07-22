@@ -1,10 +1,14 @@
 'use client'
 
+import { useSearchParams } from 'next/navigation'
 import Header from '../../components/Header'
 import Footer from '../../components/Footer'
 import PlaceList from './PlaceList'
 
 export default function PlacesPage() {
+    const searchParams = useSearchParams()
+    const areaCode = searchParams.get('areaCode')
+    const sigungu = searchParams.get('sigungu')
     return (
         <div className="min-h-screen bg-gray-50">
             <Header />
@@ -16,7 +20,7 @@ export default function PlacesPage() {
                         <p className="text-gray-600">다음 여행을 위한 특별한 장소를 찾아보세요</p>
                     </div>
 
-                    <PlaceList />
+                    <PlaceList initialAreaCode={areaCode} initialSigungu={sigungu} />
                 </div>
             </div>
 
