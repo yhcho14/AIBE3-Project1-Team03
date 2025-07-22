@@ -8,7 +8,6 @@ import PostSearchBar from './components/PostSearchBar'
 
 import NoResultsMessage from './components/NoResultsMessage'
 
-
 interface Post {
     id: number
     title: string
@@ -51,6 +50,9 @@ export default function PostList() {
     const [totalCount, setTotalCount] = useState(0)
     const router = useRouter()
     const loader = useRef<HTMLDivElement | null>(null)
+
+    const [userId, setUserId] = useState<string | null>(null)
+    const [likedPosts, setLikedPosts] = useState<{ [key: number]: boolean }>({})
 
     // 게시글 불러오기 (페이지 단위)
     const fetchPosts = useCallback(async (currentSearchKeyword = searchKeyword, currentSortBy = sortBy) => {
@@ -182,7 +184,62 @@ export default function PostList() {
         setTotalCount(0)
     }, [searchKeyword, sortBy])
 
+    // 좋아요 상태 불러오기
+    const fetchLikedPosts = useCallback(async (userId: string, postIds: number[]) => {
+        if (!userId || postIds.length === 0) return {}
+        const { data, error } = await supabase
+            .from('post_recommends')
+            .select('post_id')
+            .eq('user_id', userId)
+            .in('post_id', postIds)
+        if (error) return {}
+        const liked: { [key: number]: boolean } = {}
+        data.forEach((row: { post_id: number }) => {
+            liked[row.post_id] = true
+        })
+        return liked
+    }, [])
 
+    // 로그인 유저 정보 및 좋아요 상태 불러오기
+    useEffect(() => {
+        const getUserAndLikes = async () => {
+            const {
+                data: { user },
+            } = await supabase.auth.getUser()
+            setUserId(user?.id || null)
+            if (user && posts.length > 0) {
+                const liked = await fetchLikedPosts(user.id, posts.map(p => p.id))
+                setLikedPosts(liked || {})
+            }
+        }
+        getUserAndLikes()
+    }, [posts, fetchLikedPosts])
+
+    // 좋아요 토글 함수
+    const handleLike = async (postId: number) => {
+        if (!userId) {
+            alert('로그인 후 이용해주세요.')
+            return
+        }
+        const alreadyLiked = likedPosts[postId]
+        if (alreadyLiked) {
+            // 좋아요 취소
+            await supabase
+                .from('post_recommends')
+                .delete()
+                .eq('user_id', userId)
+                .eq('post_id', postId)
+            setLikedPosts(prev => ({ ...prev, [postId]: false }))
+            setPosts(prev => prev.map(p => p.id === postId ? { ...p, like_count: (p.like_count || 1) - 1 } : p))
+        } else {
+            // 좋아요 추가
+            await supabase
+                .from('post_recommends')
+                .insert({ user_id: userId, post_id: postId })
+            setLikedPosts(prev => ({ ...prev, [postId]: true }))
+            setPosts(prev => prev.map(p => p.id === postId ? { ...p, like_count: (p.like_count || 0) + 1 } : p))
+        }
+    }
 
     useEffect(() => {
         const checkLogin = async () => {
@@ -240,7 +297,7 @@ export default function PostList() {
                         className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
                         onClick={() => router.push(`/board/${post.id}`)}
                     >
-                        {post.image && (
+                        {post.image ? (
                             <div className="relative h-48">
                                 <img
                                     src={post.image}
@@ -254,6 +311,19 @@ export default function PostList() {
                                         </span>
                                     </div>
                                 )}
+                            </div>
+                        ) : (
+                            <div className="relative h-48 w-full bg-gray-200 flex items-center justify-center">
+                                {post.location && (
+                                    <div className="absolute top-4 left-4">
+                                        <span className="px-3 py-1 bg-black/70 text-white rounded-full text-xs">
+                                            {post.location}
+                                        </span>
+                                    </div>
+                                )}
+                                <span className="text-gray-400 text-4xl">
+                                    <svg width="48" height="48" fill="none" viewBox="0 0 24 24"><rect width="24" height="24" rx="4" fill="#e5e7eb"/><path d="M7 17l3-3.86a1 1 0 0 1 1.54-.04L15 17m-8 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2z" stroke="#9ca3af" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                                </span>
                             </div>
                         )}
                         <div className="p-6">
@@ -283,8 +353,20 @@ export default function PostList() {
                             <div className="flex items-center justify-between text-sm text-gray-500">
                                 <span>{post.created_at?.slice(0, 10)}</span>
                                 <span>작성자: {post.user_name || '익명'}</span>
-                                <span>댓글: {post.comment_count ?? 0}</span>
-                                <span>좋아요: {post.like_count ?? 0}</span>
+                                <span className="flex items-center gap-1">
+                                    <svg width="18" height="18" fill="none" viewBox="0 0 24 24">
+                                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10z" stroke="#6b7280" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                    </svg>
+                                    {post.comment_count ?? 0}
+                                </span>
+                                <button type="button" className="flex items-center gap-1 group" onClick={e => {e.stopPropagation(); handleLike(post.id)}}>
+                                    {likedPosts[post.id] ? (
+                                        <svg width="18" height="18" fill="#ef4444" viewBox="0 0 24 24"><path d="M12.62 20.56c-.38.29-.86.29-1.24 0C7.1 17.44 2 13.36 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 4.86-5.1 8.94-9.38 12.06z"/></svg>
+                                    ) : (
+                                        <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path d="M12.62 20.56c-.38.29-.86.29-1.24 0C7.1 17.44 2 13.36 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 4.86-5.1 8.94-9.38 12.06z" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                                    )}
+                                    {post.like_count ?? 0}
+                                </button>
                             </div>
                         </div>
                     </div>
